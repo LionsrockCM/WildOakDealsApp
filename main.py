@@ -20,17 +20,20 @@ class User(UserMixin, db.Model):
 class Deal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    units = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    state = db.Column(db.String(50), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    investments = db.Column(db.Float, nullable=False)
+    investor_class = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(100), nullable=False)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    file_name = db.Column(db.String(100), nullable=False)
+    dropbox_link = db.Column(db.String(500), nullable=False)
+    upload_date = db.Column(db.Date, default=datetime.utcnow().date)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -56,9 +59,12 @@ def deals():
         data = request.json
         new_deal = Deal(
             name=data['name'],
-            address=data['address'],
-            price=data['price'],
-            units=data['units'],
+            state=data['state'],
+            city=data['city'],
+            start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
+            status=data['status'],
+            investments=float(data['investments']),
+            investor_class=data['investor_class'],
             user_id=current_user.id
         )
         db.session.add(new_deal)
@@ -69,17 +75,25 @@ def deals():
     return jsonify([{
         'id': d.id,
         'name': d.name,
-        'address': d.address,
-        'price': d.price,
-        'units': d.units
+        'state': d.state,
+        'city': d.city,
+        'start_date': d.start_date.isoformat(),
+        'status': d.status,
+        'investments': d.investments,
+        'investor_class': d.investor_class
     } for d in deals])
 
 @app.route('/api/files/<int:deal_id>', methods=['GET', 'POST'])
 @login_required
 def files(deal_id):
     if request.method == 'POST':
-        file = request.files['file']
-        new_file = File(filename=file.filename, deal_id=deal_id)
+        data = request.json
+        new_file = File(
+            deal_id=deal_id,
+            file_name=data['file_name'],
+            dropbox_link=data['dropbox_link'],
+            upload_date=datetime.utcnow().date()
+        )
         db.session.add(new_file)
         db.session.commit()
         return jsonify({'id': new_file.id}), 201
@@ -87,8 +101,10 @@ def files(deal_id):
     files = File.query.filter_by(deal_id=deal_id).all()
     return jsonify([{
         'id': f.id,
-        'filename': f.filename,
-        'uploaded_at': f.uploaded_at
+        'deal_id': f.deal_id,
+        'file_name': f.file_name,
+        'dropbox_link': f.dropbox_link,
+        'upload_date': f.upload_date.isoformat()
     } for f in files])
 
 with app.app_context():
