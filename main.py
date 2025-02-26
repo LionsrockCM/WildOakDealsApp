@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
 
 class Deal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    deal_name = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(50), nullable=False)
     city = db.Column(db.String(100), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
@@ -33,7 +33,7 @@ class File(db.Model):
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
     file_name = db.Column(db.String(100), nullable=False)
     dropbox_link = db.Column(db.String(500), nullable=False)
-    upload_date = db.Column(db.Date, default=datetime.utcnow().date)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,7 +58,7 @@ def deals():
     if request.method == 'POST':
         data = request.json
         new_deal = Deal(
-            name=data['name'],
+            deal_name=data['deal_name'],
             state=data['state'],
             city=data['city'],
             start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
@@ -74,7 +74,7 @@ def deals():
     deals = Deal.query.filter_by(user_id=current_user.id).all()
     return jsonify([{
         'id': d.id,
-        'name': d.name,
+        'deal_name': d.deal_name,
         'state': d.state,
         'city': d.city,
         'start_date': d.start_date.isoformat(),
