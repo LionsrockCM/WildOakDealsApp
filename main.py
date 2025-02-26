@@ -22,7 +22,7 @@ def ask_grok(prompt):
     for attempt in range(max_retries):
         try:
             response = requests.post(
-                'https://api.grok.x.ai/v1/chat/completions',
+                'https://api.x.ai/v1/chat/completions',
                 headers=headers,
                 json=data,
                 timeout=10
