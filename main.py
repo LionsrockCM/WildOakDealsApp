@@ -14,7 +14,8 @@ def ask_grok(prompt):
     }
     
     data = {
-        'prompt': prompt,
+        'model': 'grok-3',
+        'messages': [{'role': 'user', 'content': prompt}],
         'max_tokens': 150
     }
     
