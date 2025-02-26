@@ -1,5 +1,6 @@
 
 import os
+import time
 import requests
 
 def ask_grok(prompt):
@@ -17,11 +18,21 @@ def ask_grok(prompt):
         'max_tokens': 150
     }
     
-    response = requests.post(
-        'https://api.grok.x.ai/v1/chat/completions',
-        headers=headers,
-        json=data
-    )
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                'https://api.grok.x.ai/v1/chat/completions',
+                headers=headers,
+                json=data,
+                timeout=10
+            )
+            break
+        except requests.exceptions.RequestException as e:
+            if attempt == max_retries - 1:
+                raise
+            print(f"Attempt {attempt + 1} failed, retrying...")
+            time.sleep(1)
     
     if response.status_code == 200:
         return response.json()['choices'][0]['message']['content']
