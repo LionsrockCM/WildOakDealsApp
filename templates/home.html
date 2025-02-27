@@ -11,37 +11,173 @@
         <a href="{{ url_for('logout') }}">Logout</a>
         
         <h2>Add New Deal</h2>
+        <div id="successMessage" style="display: none; color: green; margin-bottom: 10px;">Deal added successfully!</div>
+        
         <form id="dealForm" action="/api/deals" method="POST">
             <div>
                 <label for="deal_name">Deal Name:</label>
                 <input type="text" id="deal_name" name="deal_name" required>
+                <span class="error-message" id="deal_name_error"></span>
             </div>
             <div>
                 <label for="state">State:</label>
-                <input type="text" id="state" name="state" required>
+                <input type="text" id="state" name="state" list="us-states" required>
+                <datalist id="us-states">
+                    <option value="Alabama">
+                    <option value="Alaska">
+                    <option value="Arizona">
+                    <option value="Arkansas">
+                    <option value="California">
+                    <option value="Colorado">
+                    <option value="Connecticut">
+                    <option value="Delaware">
+                    <option value="Florida">
+                    <option value="Georgia">
+                    <option value="Hawaii">
+                    <option value="Idaho">
+                    <option value="Illinois">
+                    <option value="Indiana">
+                    <option value="Iowa">
+                    <option value="Kansas">
+                    <option value="Kentucky">
+                    <option value="Louisiana">
+                    <option value="Maine">
+                    <option value="Maryland">
+                    <option value="Massachusetts">
+                    <option value="Michigan">
+                    <option value="Minnesota">
+                    <option value="Mississippi">
+                    <option value="Missouri">
+                    <option value="Montana">
+                    <option value="Nebraska">
+                    <option value="Nevada">
+                    <option value="New Hampshire">
+                    <option value="New Jersey">
+                    <option value="New Mexico">
+                    <option value="New York">
+                    <option value="North Carolina">
+                    <option value="North Dakota">
+                    <option value="Ohio">
+                    <option value="Oklahoma">
+                    <option value="Oregon">
+                    <option value="Pennsylvania">
+                    <option value="Rhode Island">
+                    <option value="South Carolina">
+                    <option value="South Dakota">
+                    <option value="Tennessee">
+                    <option value="Texas">
+                    <option value="Utah">
+                    <option value="Vermont">
+                    <option value="Virginia">
+                    <option value="Washington">
+                    <option value="West Virginia">
+                    <option value="Wisconsin">
+                    <option value="Wyoming">
+                </datalist>
+                <span class="error-message" id="state_error"></span>
             </div>
             <div>
                 <label for="city">City:</label>
                 <input type="text" id="city" name="city" required>
+                <span class="error-message" id="city_error"></span>
             </div>
             <div>
                 <label for="start_date">Start Date:</label>
                 <input type="date" id="start_date" name="start_date" required>
+                <span class="error-message" id="start_date_error"></span>
             </div>
             <div>
                 <label for="status">Status:</label>
                 <input type="text" id="status" name="status" required>
+                <span class="error-message" id="status_error"></span>
             </div>
             <div>
                 <label for="investments">Investments:</label>
                 <input type="number" id="investments" name="investments" step="0.01" required>
+                <span class="error-message" id="investments_error"></span>
             </div>
             <div>
                 <label for="investor_class">Investor Class:</label>
                 <input type="text" id="investor_class" name="investor_class" required>
+                <span class="error-message" id="investor_class_error"></span>
             </div>
             <button type="submit">Submit Deal</button>
         </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('dealForm');
+                const inputs = form.querySelectorAll('input[required]');
+                const successMessage = document.getElementById('successMessage');
+
+                // Add real-time validation
+                inputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        validateField(this);
+                    });
+                    
+                    input.addEventListener('input', function() {
+                        if (this.value.trim() !== '') {
+                            document.getElementById(`${this.id}_error`).textContent = '';
+                        }
+                    });
+                });
+
+                // Form submission
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Validate all fields
+                    let isValid = true;
+                    inputs.forEach(input => {
+                        if (!validateField(input)) {
+                            isValid = false;
+                        }
+                    });
+                    
+                    if (isValid) {
+                        // Submit form via AJAX
+                        const formData = new FormData(form);
+                        
+                        fetch('/api/deals', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Show success message
+                                successMessage.style.display = 'block';
+                                form.reset();
+                                
+                                // Hide success message after 3 seconds
+                                setTimeout(() => {
+                                    successMessage.style.display = 'none';
+                                }, 3000);
+                                
+                                return response.json();
+                            }
+                            throw new Error('Network response was not ok.');
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+
+                function validateField(field) {
+                    const errorElement = document.getElementById(`${field.id}_error`);
+                    
+                    if (!field.value.trim()) {
+                        errorElement.textContent = 'Field required';
+                        errorElement.style.color = 'red';
+                        return false;
+                    } else {
+                        errorElement.textContent = '';
+                        return true;
+                    }
+                }
+            });
+        </script>
     {% else %}
         <a href="{{ url_for('login') }}">Login</a>
     {% endif %}
