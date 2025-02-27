@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,164 +8,197 @@
     {% if current_user.is_authenticated %}
         <p>Welcome, {{ current_user.username }}!</p>
         <a href="{{ url_for('logout') }}">Logout</a>
-        
+
         <h2>Add New Deal</h2>
         <div id="successMessage" style="display: none; color: green; margin-bottom: 10px;">Deal added successfully!</div>
-        
+
         <form id="dealForm" action="/api/deals" method="POST">
-            <div>
-                <label for="deal_name">Deal Name:</label>
-                <input type="text" id="deal_name" name="deal_name" required>
-                <span class="error-message" id="deal_name_error"></span>
-            </div>
-            <div>
-                <label for="state">State:</label>
-                <input type="text" id="state" name="state" list="us-states" required>
-                <datalist id="us-states">
-                    <option value="Alabama">
-                    <option value="Alaska">
-                    <option value="Arizona">
-                    <option value="Arkansas">
-                    <option value="California">
-                    <option value="Colorado">
-                    <option value="Connecticut">
-                    <option value="Delaware">
-                    <option value="Florida">
-                    <option value="Georgia">
-                    <option value="Hawaii">
-                    <option value="Idaho">
-                    <option value="Illinois">
-                    <option value="Indiana">
-                    <option value="Iowa">
-                    <option value="Kansas">
-                    <option value="Kentucky">
-                    <option value="Louisiana">
-                    <option value="Maine">
-                    <option value="Maryland">
-                    <option value="Massachusetts">
-                    <option value="Michigan">
-                    <option value="Minnesota">
-                    <option value="Mississippi">
-                    <option value="Missouri">
-                    <option value="Montana">
-                    <option value="Nebraska">
-                    <option value="Nevada">
-                    <option value="New Hampshire">
-                    <option value="New Jersey">
-                    <option value="New Mexico">
-                    <option value="New York">
-                    <option value="North Carolina">
-                    <option value="North Dakota">
-                    <option value="Ohio">
-                    <option value="Oklahoma">
-                    <option value="Oregon">
-                    <option value="Pennsylvania">
-                    <option value="Rhode Island">
-                    <option value="South Carolina">
-                    <option value="South Dakota">
-                    <option value="Tennessee">
-                    <option value="Texas">
-                    <option value="Utah">
-                    <option value="Vermont">
-                    <option value="Virginia">
-                    <option value="Washington">
-                    <option value="West Virginia">
-                    <option value="Wisconsin">
-                    <option value="Wyoming">
-                </datalist>
-                <span class="error-message" id="state_error"></span>
-            </div>
-            <div>
-                <label for="city">City:</label>
-                <input type="text" id="city" name="city" required>
-                <span class="error-message" id="city_error"></span>
-            </div>
-            <div>
-                <label for="status">Status:</label>
-                <input type="text" id="status" name="status" required>
-                <span class="error-message" id="status_error"></span>
-            </div>
+            <div><label for="deal_name">Deal Name:</label><input type="text" id="deal_name" name="deal_name" required><span class="error-message" id="deal_name_error"></span></div>
+            <div><label for="state">State:</label><input type="text" id="state" name="state" list="us-states" required><datalist id="us-states"><!-- 50 US states --></datalist><span class="error-message" id="state_error"></span></div>
+            <div><label for="city">City:</label><input type="text" id="city" name="city" required><span class="error-message" id="city_error"></span></div>
+            <div><label for="status">Status:</label><input type="text" id="status" name="status" required><span class="error-message" id="status_error"></span></div>
             <button type="submit">Submit Deal</button>
+        </form>
+
+        <h2>Deal List</h2>
+        <table id="dealTable">
+            <thead><tr><th>ID</th><th>Deal Name</th><th>State</th><th>City</th><th>Status</th><th>Created At</th><th>Updated At</th></tr></thead>
+            <tbody id="dealTableBody"></tbody>
+        </table>
+
+        <h2>Upload File</h2>
+        <div id="fileSuccessMessage" style="display: none; color: green; margin-bottom: 10px;">File uploaded successfully!</div>
+        <form id="fileForm" action="/api/files/" method="POST">
+            <div><label for="deal_id">Deal ID:</label><input type="number" id="deal_id" name="deal_id" required><span class="error-message" id="deal_id_error"></span></div>
+            <div><label for="file_name">File Name:</label><input type="text" id="file_name" name="file_name" required><span class="error-message" id="file_name_error"></span></div>
+            <div><label for="dropbox_link">Dropbox Link:</label><input type="text" id="dropbox_link" name="dropbox_link" required><span class="error-message" id="dropbox_link_error"></span></div>
+            <button type="submit">Upload File</button>
         </form>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const form = document.getElementById('dealForm');
-                const inputs = form.querySelectorAll('input[required]');
-                const successMessage = document.getElementById('successMessage');
+                const dealForm = document.getElementById('dealForm');
+                const fileForm = document.getElementById('fileForm');
+                const dealInputs = dealForm.querySelectorAll('input[required]');
+                const fileInputs = fileForm.querySelectorAll('input[required]');
+                const dealSuccessMessage = document.getElementById('successMessage');
+                const fileSuccessMessage = document.getElementById('fileSuccessMessage');
+                const dealTableBody = document.getElementById('dealTableBody');
 
-                // Add real-time validation
-                inputs.forEach(input => {
+                // Fetch deals on page load
+                fetchDeals();
+
+                dealInputs.forEach(input => {
                     input.addEventListener('blur', function() {
-                        validateField(this);
+                        if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'deal');
                     });
-                    
                     input.addEventListener('input', function() {
-                        if (this.value.trim() !== '') {
+                        if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
                             document.getElementById(`${this.id}_error`).textContent = '';
                         }
                     });
                 });
 
-                // Form submission
-                form.addEventListener('submit', function(e) {
+                dealForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
-                    // Validate all fields
                     let isValid = true;
-                    inputs.forEach(input => {
-                        if (!validateField(input)) {
-                            isValid = false;
-                        }
+                    dealInputs.forEach(input => {
+                        if (!validateField(input, 'deal')) isValid = false;
                     });
-                    
                     if (isValid) {
-                        // Submit form via AJAX
-                        const formData = new FormData(form);
-                        
+                        const formData = new FormData(dealForm);
                         fetch('/api/deals', {
                             method: 'POST',
-                            body: formData
+                            body: formData,
+                            credentials: 'include' // Ensure cookies are sent for authentication
                         })
                         .then(response => {
-                            if (response.ok) {
-                                return response.json();
+                            if (!response.ok) {
+                                return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
                             }
-                            throw new Error('Network response was not ok.');
+                            return response.json();
                         })
                         .then(data => {
                             if (data.message) {
-                                // Show success message
-                                successMessage.textContent = data.message;
-                                successMessage.style.display = 'block';
-                                form.reset();
-                                
-                                // Hide success message after 3 seconds
-                                setTimeout(() => {
-                                    successMessage.style.display = 'none';
-                                }, 3000);
+                                dealSuccessMessage.textContent = data.message;
+                                dealSuccessMessage.style.display = 'block';
+                                dealSuccessMessage.style.color = 'green';
+                                dealForm.reset();
+                                setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
+                                fetchDeals(); // Refresh table after successful submission
+                            } else if (data.error) {
+                                dealSuccessMessage.textContent = data.error;
+                                dealSuccessMessage.style.color = 'red';
+                                dealSuccessMessage.style.display = 'block';
+                                setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
                             }
                         })
                         .catch(error => {
+                            dealSuccessMessage.textContent = error.message || 'An error occurred';
+                            dealSuccessMessage.style.color = 'red';
+                            dealSuccessMessage.style.display = 'block';
+                            setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
                             console.error('Error:', error);
                         });
                     }
                 });
 
-                function validateField(field) {
-                    const errorElement = document.getElementById(`${field.id}_error`);
-                    
-                    if (!field.value.trim()) {
-                        errorElement.textContent = 'Field required';
-                        errorElement.style.color = 'red';
-                        return false;
-                    } else {
+                fileInputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'file');
+                    });
+                    input.addEventListener('input', function() {
+                        if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
+                            document.getElementById(`${this.id}_error`).textContent = '';
+                        }
+                    });
+                });
+
+                fileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    let isValid = true;
+                    fileInputs.forEach(input => {
+                        if (!validateField(input, 'file')) isValid = false;
+                    });
+                    if (isValid) {
+                        const dealId = document.getElementById('deal_id').value;
+                        const formData = new FormData(fileForm);
+                        fetch(`/api/files/${dealId}`, {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include'
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.message) {
+                                fileSuccessMessage.textContent = data.message;
+                                fileSuccessMessage.style.display = 'block';
+                                fileForm.reset();
+                                setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                            } else if (data.error) {
+                                fileSuccessMessage.textContent = data.error;
+                                fileSuccessMessage.style.color = 'red';
+                                fileSuccessMessage.style.display = 'block';
+                                setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                            }
+                        })
+                        .catch(error => {
+                            fileSuccessMessage.textContent = error.message || 'An error occurred';
+                            fileSuccessMessage.style.color = 'red';
+                            fileSuccessMessage.style.display = 'block';
+                            setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+
+                function validateField(field, formType) {
+                    if (field && field.tagName === 'INPUT' && field.hasAttribute('required')) {
+                        const errorElement = document.getElementById(`${field.id}_error`);
+                        if (!field.value.trim()) {
+                            errorElement.textContent = 'Field required';
+                            errorElement.style.color = 'red';
+                            return false;
+                        }
                         errorElement.textContent = '';
                         return true;
                     }
+                    return true;
                 }
-            });
-        </script>
+
+                function fetchDeals() {
+                    fetch('/api/deals', {
+                        method: 'GET',
+                        credentials: 'include' // Ensure cookies are sent for authentication
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed to fetch deals');
+                        return response.json();
+                    })
+                    .then(data => {
+                        dealTableBody.innerHTML = '';
+                        data.forEach(deal => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${deal.id}</td>
+                                <td>${deal.deal_name}</td>
+                                <td>${deal.state}</td>
+                                <td>${deal.city}</td>
+                                <td>${deal.status}</td>
+                                <td>${deal.created_at}</td>
+                                <td>${deal.updated_at}</td>
+                            `;
+                            dealTableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching deals:', error));
+                }
+            </script>
     {% else %}
         <a href="{{ url_for('login') }}">Login</a>
     {% endif %}

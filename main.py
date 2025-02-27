@@ -67,6 +67,10 @@ def deals():
                 data = request.json
             else:
                 data = request.form.to_dict()
+            required_fields = ['deal_name', 'state', 'city', 'status']
+            missing = [field for field in required_fields if not data.get(field)]
+            if missing:
+                return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
             new_deal = Deal(
                 deal_name=data.get('deal_name'),
                 state=data.get('state'),
@@ -76,7 +80,12 @@ def deals():
             )
             db.session.add(new_deal)
             db.session.commit()
-            response = {'id': new_deal.id, 'message': 'Deal added successfully'}
+            response = {
+                'id': new_deal.id,
+                'message': 'Deal added successfully',
+                'created_at': new_deal.created_at.isoformat(),
+                'updated_at': new_deal.updated_at.isoformat()
+            }
             return jsonify(response), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 400
@@ -86,29 +95,47 @@ def deals():
         'deal_name': d.deal_name,
         'state': d.state,
         'city': d.city,
-        'status': d.status
+        'status': d.status,
+        'created_at': d.created_at.isoformat(),
+        'updated_at': d.updated_at.isoformat()
     } for d in deals])
 
 @app.route('/api/files/<int:deal_id>', methods=['GET', 'POST'])
 @login_required
 def files(deal_id):
     if request.method == 'POST':
-        data = request.json
-        new_file = File(
-            deal_id=deal_id,
-            file_name=data.get('file_name'),
-            dropbox_link=data.get('dropbox_link')
-        )
-        db.session.add(new_file)
-        db.session.commit()
-        return jsonify({'id': new_file.id}), 201
+        try:
+            if request.is_json:
+                data = request.json
+            else:
+                data = request.form.to_dict()
+            required_fields = ['file_name', 'dropbox_link']
+            missing = [field for field in required_fields if not data.get(field)]
+            if missing:
+                return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
+            new_file = File(
+                deal_id=deal_id,
+                file_name=data.get('file_name'),
+                dropbox_link=data.get('dropbox_link')
+            )
+            db.session.add(new_file)
+            db.session.commit()
+            response = {
+                'id': new_file.id,
+                'message': 'File uploaded successfully'
+            }
+            return jsonify(response), 201
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
     files = File.query.filter_by(deal_id=deal_id).all()
     return jsonify([{
         'id': f.id,
         'deal_id': f.deal_id,
         'file_name': f.file_name,
         'dropbox_link': f.dropbox_link,
-        'upload_date': f.upload_date.isoformat()
+        'upload_date': f.upload_date.isoformat(),
+        'created_at': f.created_at.isoformat(),
+        'updated_at': f.updated_at.isoformat()
     } for f in files])
 
 with app.app_context():
