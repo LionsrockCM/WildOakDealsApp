@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -44,16 +43,10 @@ def home():
 def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
-        if user and user.password == request.form['password']:  # In production, use proper password hashing
-            # Login user with remember=True for persistent session
+        if user and user.password == request.form['password']:
             login_user(user, remember=True)
-            # Get the next page parameter or default to home
-            next_page = request.args.get('next')
-            if not next_page or not next_page.startswith('/'):
-                next_page = url_for('home')
-            return redirect(next_page)
+            return redirect(url_for('home'))
     return render_template('login.html')
-</old_str>
 
 @app.route('/logout')
 @login_required
@@ -65,26 +58,26 @@ def logout():
 @login_required
 def deals():
     if request.method == 'POST':
-        if request.is_json:
-            data = request.json
-        else:
-            data = request.form
-            
-        new_deal = Deal(
-            deal_name=data['deal_name'],
-            state=data['state'],
-            city=data['city'],
-            status=data['status'],
-            user_id=current_user.id
-        )
-        db.session.add(new_deal)
-        db.session.commit()
-        
-        if request.is_json:
-            return jsonify({'id': new_deal.id}), 201
-        else:
-            return redirect(url_for('home'))
-    
+        try:
+            if request.is_json:
+                data = request.json
+            else:
+                data = request.form.to_dict()
+            new_deal = Deal(
+                deal_name=data.get('deal_name'),
+                state=data.get('state'),
+                city=data.get('city'),
+                status=data.get('status'),
+                user_id=current_user.id
+            )
+            db.session.add(new_deal)
+            db.session.commit()
+            if request.is_json:
+                return jsonify({'id': new_deal.id, 'message': 'Deal added successfully'}), 201
+            else:
+                return redirect(url_for('home'))
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
     deals = Deal.query.filter_by(user_id=current_user.id).all()
     return jsonify([{
         'id': d.id,
@@ -101,13 +94,12 @@ def files(deal_id):
         data = request.json
         new_file = File(
             deal_id=deal_id,
-            file_name=data['file_name'],
-            dropbox_link=data['dropbox_link']
+            file_name=data.get('file_name'),
+            dropbox_link=data.get('dropbox_link')
         )
         db.session.add(new_file)
         db.session.commit()
         return jsonify({'id': new_file.id}), 201
-    
     files = File.query.filter_by(deal_id=deal_id).all()
     return jsonify([{
         'id': f.id,
