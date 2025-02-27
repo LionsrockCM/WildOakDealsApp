@@ -130,7 +130,14 @@
                         })
                         .then(response => {
                             if (response.ok) {
+                                return response.json();
+                            }
+                            throw new Error('Network response was not ok.');
+                        })
+                        .then(data => {
+                            if (data.message) {
                                 // Show success message
+                                successMessage.textContent = data.message;
                                 successMessage.style.display = 'block';
                                 form.reset();
                                 
@@ -138,10 +145,7 @@
                                 setTimeout(() => {
                                     successMessage.style.display = 'none';
                                 }, 3000);
-                                
-                                return response.json();
                             }
-                            throw new Error('Network response was not ok.');
                         })
                         .catch(error => {
                             console.error('Error:', error);

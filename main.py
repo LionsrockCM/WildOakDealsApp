@@ -72,10 +72,8 @@ def deals():
             )
             db.session.add(new_deal)
             db.session.commit()
-            if request.is_json:
-                return jsonify({'id': new_deal.id, 'message': 'Deal added successfully'}), 201
-            else:
-                return redirect(url_for('home'))
+            response = {'id': new_deal.id, 'message': 'Deal added successfully'}
+            return jsonify(response), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 400
     deals = Deal.query.filter_by(user_id=current_user.id).all()
