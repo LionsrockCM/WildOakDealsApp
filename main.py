@@ -96,8 +96,7 @@ def files(deal_id):
         new_file = File(
             deal_id=deal_id,
             file_name=data['file_name'],
-            dropbox_link=data['dropbox_link'],
-            upload_date=datetime.utcnow().date()
+            dropbox_link=data['dropbox_link']
         )
         db.session.add(new_file)
         db.session.commit()
