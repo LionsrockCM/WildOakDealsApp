@@ -22,7 +22,6 @@ class Deal(db.Model):
     deal_name = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(50), nullable=False)
     city = db.Column(db.String(100), nullable=False)
-    start_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -69,7 +68,6 @@ def deals():
             deal_name=data['deal_name'],
             state=data['state'],
             city=data['city'],
-            start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
             status=data['status'],
             user_id=current_user.id
         )
@@ -87,7 +85,6 @@ def deals():
         'deal_name': d.deal_name,
         'state': d.state,
         'city': d.city,
-        'start_date': d.start_date.isoformat(),
         'status': d.status
     } for d in deals])
 
