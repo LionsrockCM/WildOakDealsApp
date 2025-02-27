@@ -45,9 +45,15 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
         if user and user.password == request.form['password']:  # In production, use proper password hashing
-            login_user(user)
-            return redirect(url_for('home'))
+            # Login user with remember=True for persistent session
+            login_user(user, remember=True)
+            # Get the next page parameter or default to home
+            next_page = request.args.get('next')
+            if not next_page or not next_page.startswith('/'):
+                next_page = url_for('home')
+            return redirect(next_page)
     return render_template('login.html')
+</old_str>
 
 @app.route('/logout')
 @login_required
