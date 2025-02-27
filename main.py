@@ -23,7 +23,6 @@ class Deal(db.Model):
     state = db.Column(db.String(50), nullable=False)
     city = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(50), nullable=False)
-    start_date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class File(db.Model):
@@ -70,7 +69,6 @@ def deals():
             state=data['state'],
             city=data['city'],
             status=data['status'],
-            start_date=datetime.utcnow().date(),
             user_id=current_user.id
         )
         db.session.add(new_deal)
