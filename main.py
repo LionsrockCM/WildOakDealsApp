@@ -24,8 +24,6 @@ class Deal(db.Model):
     city = db.Column(db.String(100), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), nullable=False)
-    investments = db.Column(db.Float, nullable=False)
-    investor_class = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class File(db.Model):
@@ -73,8 +71,6 @@ def deals():
             city=data['city'],
             start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
             status=data['status'],
-            investments=float(data['investments']),
-            investor_class=data['investor_class'],
             user_id=current_user.id
         )
         db.session.add(new_deal)
@@ -92,9 +88,7 @@ def deals():
         'state': d.state,
         'city': d.city,
         'start_date': d.start_date.isoformat(),
-        'status': d.status,
-        'investments': d.investments,
-        'investor_class': d.investor_class
+        'status': d.status
     } for d in deals])
 
 @app.route('/api/files/<int:deal_id>', methods=['GET', 'POST'])
