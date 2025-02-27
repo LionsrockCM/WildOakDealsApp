@@ -23,6 +23,8 @@ class Deal(db.Model):
     city = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +32,8 @@ class File(db.Model):
     file_name = db.Column(db.String(100), nullable=False)
     dropbox_link = db.Column(db.String(500), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
