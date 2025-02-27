@@ -62,7 +62,11 @@ def logout():
 @login_required
 def deals():
     if request.method == 'POST':
-        data = request.json
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form
+            
         new_deal = Deal(
             deal_name=data['deal_name'],
             state=data['state'],
@@ -75,7 +79,11 @@ def deals():
         )
         db.session.add(new_deal)
         db.session.commit()
-        return jsonify({'id': new_deal.id}), 201
+        
+        if request.is_json:
+            return jsonify({'id': new_deal.id}), 201
+        else:
+            return redirect(url_for('home'))
     
     deals = Deal.query.filter_by(user_id=current_user.id).all()
     return jsonify([{
