@@ -45,6 +45,10 @@
                 const fileSuccessMessage = document.getElementById('fileSuccessMessage');
                 const dealTableBody = document.getElementById('dealTableBody');
 
+                // Make sure the form action doesn't cause navigation
+                dealForm.setAttribute('action', 'javascript:void(0);');
+                fileForm.setAttribute('action', 'javascript:void(0);');
+                
                 // Fetch deals on page load
                 fetchDeals();
 
@@ -60,7 +64,7 @@
                 });
 
                 dealForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevent form submission and page navigation
                     let isValid = true;
                     dealInputs.forEach(input => {
                         if (!validateField(input, 'deal')) isValid = false;
@@ -101,6 +105,7 @@
                             console.error('Error:', error);
                         });
                     }
+                    return false; // Additional safeguard to prevent navigation
                 });
 
                 fileInputs.forEach(input => {
@@ -174,29 +179,42 @@
                 function fetchDeals() {
                     fetch('/api/deals', {
                         method: 'GET',
-                        credentials: 'include' // Ensure cookies are sent for authentication
+                        credentials: 'include', // Ensure cookies are sent for authentication
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     })
                     .then(response => {
                         if (!response.ok) throw new Error('Failed to fetch deals');
                         return response.json();
                     })
                     .then(data => {
-                        dealTableBody.innerHTML = '';
-                        data.forEach(deal => {
+                        dealTableBody.innerHTML = ''; // Clear existing table rows
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(deal => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${deal.id}</td>
+                                    <td>${deal.deal_name}</td>
+                                    <td>${deal.state}</td>
+                                    <td>${deal.city}</td>
+                                    <td>${deal.status}</td>
+                                    <td>${deal.created_at}</td>
+                                    <td>${deal.updated_at}</td>
+                                `;
+                                dealTableBody.appendChild(row);
+                            });
+                        } else {
+                            // Show a message if no deals are found
                             const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${deal.id}</td>
-                                <td>${deal.deal_name}</td>
-                                <td>${deal.state}</td>
-                                <td>${deal.city}</td>
-                                <td>${deal.status}</td>
-                                <td>${deal.created_at}</td>
-                                <td>${deal.updated_at}</td>
-                            `;
+                            row.innerHTML = '<td colspan="7" style="text-align: center;">No deals found</td>';
                             dealTableBody.appendChild(row);
-                        });
+                        }
                     })
-                    .catch(error => console.error('Error fetching deals:', error));
+                    .catch(error => {
+                        console.error('Error fetching deals:', error);
+                        dealTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading deals</td></tr>';
+                    });
                 }
             </script>
     {% else %}
