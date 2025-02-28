@@ -24,7 +24,7 @@ def upgrade():
                existing_type=sa.VARCHAR(length=120),
                type_=sa.String(length=256),
                existing_nullable=False)
-        batch_op.create_foreign_key(None, 'role', ['role_id'], ['id'])
+        batch_op.create_foreign_key('fk_user_role_id', 'role', ['role_id'], ['id'])
 
     # ### end Alembic commands ###
 
