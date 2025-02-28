@@ -8,6 +8,7 @@ from datetime import datetime
 from flask_wtf.csrf import CSRFProtect
 from flask_sslify import SSLify
 from functools import wraps
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -20,6 +21,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 csrf = CSRFProtect(app)
+migrate = Migrate(app, db)
 
 # Enable HTTPS redirection in production (optional, comment out for local testing)
 if 'REPLIT_DEPLOYMENT' in os.environ:
