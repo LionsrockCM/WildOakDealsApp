@@ -13,6 +13,7 @@
         <div id="successMessage" style="display: none; color: green; margin-bottom: 10px;">Deal added successfully!</div>
 
         <form id="dealForm" action="/api/deals" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div><label for="deal_name">Deal Name:</label><input type="text" id="deal_name" name="deal_name" required><span class="error-message" id="deal_name_error"></span></div>
             <div><label for="state">State:</label><input type="text" id="state" name="state" list="us-states" required><datalist id="us-states"><!-- 50 US states --></datalist><span class="error-message" id="state_error"></span></div>
             <div><label for="city">City:</label><input type="text" id="city" name="city" required><span class="error-message" id="city_error"></span></div>
@@ -22,13 +23,14 @@
 
         <h2>Deal List</h2>
         <table id="dealTable">
-            <thead><tr><th>ID</th><th>Deal Name</th><th>State</th><th>City</th><th>Status</th><th>Created At</th><th>Updated At</th></tr></thead>
+            <thead><tr><th>ID</th><th>Deal Name</th><th>State</th><th>City</th><th>Status</th><th>Created At</th><th>Updated At</th><th>Actions</th></tr></thead>
             <tbody id="dealTableBody"></tbody>
         </table>
 
         <h2>Upload File</h2>
         <div id="fileSuccessMessage" style="display: none; color: green; margin-bottom: 10px;">File uploaded successfully!</div>
         <form id="fileForm" action="/api/files/" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div><label for="deal_id">Deal ID:</label><input type="number" id="deal_id" name="deal_id" required><span class="error-message" id="deal_id_error"></span></div>
             <div><label for="file_name">File Name:</label><input type="text" id="file_name" name="file_name" required><span class="error-message" id="file_name_error"></span></div>
             <div><label for="dropbox_link">Dropbox Link:</label><input type="text" id="dropbox_link" name="dropbox_link" required><span class="error-message" id="dropbox_link_error"></span></div>
@@ -45,7 +47,6 @@
                 const fileSuccessMessage = document.getElementById('fileSuccessMessage');
                 const dealTableBody = document.getElementById('dealTableBody');
 
-                // Fetch deals on page load
                 fetchDeals();
 
                 dealInputs.forEach(input => {
@@ -70,22 +71,24 @@
                         fetch('/api/deals', {
                             method: 'POST',
                             body: formData,
-                            credentials: 'include' // Ensure cookies are sent for authentication
+                            credentials: 'include'
                         })
                         .then(response => {
+                            console.log('Deal submission response:', response.status);
                             if (!response.ok) {
                                 return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
                             }
                             return response.json();
                         })
                         .then(data => {
+                            console.log('Deal submission data:', data);
                             if (data.message) {
                                 dealSuccessMessage.textContent = data.message;
                                 dealSuccessMessage.style.display = 'block';
                                 dealSuccessMessage.style.color = 'green';
                                 dealForm.reset();
                                 setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
-                                fetchDeals(); // Refresh table after successful submission
+                                fetchDeals();
                             } else if (data.error) {
                                 dealSuccessMessage.textContent = data.error;
                                 dealSuccessMessage.style.color = 'red';
@@ -94,11 +97,11 @@
                             }
                         })
                         .catch(error => {
+                            console.error('Deal submission error:', error);
                             dealSuccessMessage.textContent = error.message || 'An error occurred';
                             dealSuccessMessage.style.color = 'red';
                             dealSuccessMessage.style.display = 'block';
                             setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
-                            console.error('Error:', error);
                         });
                     }
                 });
@@ -129,15 +132,18 @@
                             credentials: 'include'
                         })
                         .then(response => {
+                            console.log('File submission response:', response.status);
                             if (!response.ok) {
                                 return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
                             }
                             return response.json();
                         })
                         .then(data => {
+                            console.log('File submission data:', data);
                             if (data.message) {
                                 fileSuccessMessage.textContent = data.message;
                                 fileSuccessMessage.style.display = 'block';
+                                fileSuccessMessage.style.color = 'green';
                                 fileForm.reset();
                                 setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
                             } else if (data.error) {
@@ -148,19 +154,28 @@
                             }
                         })
                         .catch(error => {
+                            console.error('File submission error:', error);
                             fileSuccessMessage.textContent = error.message || 'An error occurred';
                             fileSuccessMessage.style.color = 'red';
                             fileSuccessMessage.style.display = 'block';
                             setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
-                            console.error('Error:', error);
                         });
                     }
                 });
 
                 function validateField(field, formType) {
-                    if (field && field.tagName === 'INPUT' && field.hasAttribute('required')) {
+                    console.log('validateField called for field:', field ? field.id : 'undefined');
+                    if (!field) {
+                        console.error('Field is undefined');
+                        return true;
+                    }
+                    if (field.tagName === 'INPUT' && field.hasAttribute('required')) {
                         const errorElement = document.getElementById(`${field.id}_error`);
-                        if (!field.value.trim()) {
+                        if (!errorElement) {
+                            console.error(`Error element not found for field: ${field.id}`);
+                            return true;
+                        }
+                        if (!field.value || !field.value.trim()) {
                             errorElement.textContent = 'Field required';
                             errorElement.style.color = 'red';
                             return false;
@@ -174,13 +189,17 @@
                 function fetchDeals() {
                     fetch('/api/deals', {
                         method: 'GET',
-                        credentials: 'include' // Ensure cookies are sent for authentication
+                        credentials: 'include'
                     })
                     .then(response => {
-                        if (!response.ok) throw new Error('Failed to fetch deals');
+                        console.log('Fetch deals response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch deals: ${response.status}`);
+                        }
                         return response.json();
                     })
                     .then(data => {
+                        console.log('Deals data received:', data);
                         dealTableBody.innerHTML = '';
                         data.forEach(deal => {
                             const row = document.createElement('tr');
@@ -192,13 +211,17 @@
                                 <td>${deal.status}</td>
                                 <td>${deal.created_at}</td>
                                 <td>${deal.updated_at}</td>
+                                <td><a href="/deal/${deal.id}">View</a></td>
                             `;
                             dealTableBody.appendChild(row);
                         });
                     })
-                    .catch(error => console.error('Error fetching deals:', error));
+                    .catch(error => {
+                        console.error('Error fetching deals:', error);
+                    });
                 }
-            </script>
+            });
+        </script>
     {% else %}
         <a href="{{ url_for('login') }}">Login</a>
     {% endif %}

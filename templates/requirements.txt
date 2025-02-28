@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+werkzeug
+Flask-WTF
+Flask-SSLify
+Flask-Migrate
