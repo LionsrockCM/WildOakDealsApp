@@ -68,9 +68,8 @@ class Deal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    deal_status_histories = db.relationship('DealStatusHistory', cascade='all, delete-orphan')
-    deal_status_history_entry = db.relationship('DealStatusHistory', backref='deal_status_entry', overlaps="deal_status_histories")
-    deal_status_entries = db.relationship('DealStatusHistory', backref='deal_status_record', overlaps="deal_status_histories,deal_status_history_entry")
+    # Simplified relationship - just one clean relationship with cascade delete
+    status_histories = db.relationship('DealStatusHistory', backref='deal', cascade='all, delete-orphan')
 
 class DealStatusHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,7 +78,7 @@ class DealStatusHistory(db.Model):
     changed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     changed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    deal = db.relationship('Deal', backref='deal_status_record', overlaps="deal_status_histories,deal_status_history_entry,deal_status_entries")
+    # The backref='deal' is now defined in the Deal class
     user = db.relationship('User', backref='status_changes')
 
 class File(db.Model):
