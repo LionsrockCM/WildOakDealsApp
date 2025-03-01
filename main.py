@@ -6,9 +6,12 @@ import os
 from pathlib import Path
 from datetime import datetime
 from flask_wtf.csrf import CSRFProtect, CSRFError
+import smtplib
+from email.mime.text import MIMEText
 from flask_sslify import SSLify
 from functools import wraps
 from flask_migrate import Migrate
+from collections import defaultdict
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -22,6 +25,13 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 csrf = CSRFProtect(app)
 migrate = Migrate(app, db)
+
+# Email configuration using Replit Secrets
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('GMAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('GMAIL_PASSWORD')
 
 # Enable HTTPS redirection in production (optional, comment out for local testing)
 if 'REPLIT_DEPLOYMENT' in os.environ:
@@ -58,6 +68,10 @@ class Deal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    deal_status_histories = db.relationship('DealStatusHistory', cascade='all, delete-orphan')
+    deal_status_history_entry = db.relationship('DealStatusHistory', backref='deal_status_entry', overlaps="deal_status_histories")
+    deal_status_entries = db.relationship('DealStatusHistory', backref='deal_status_record', overlaps="deal_status_histories,deal_status_history_entry")
+
 class DealStatusHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
@@ -65,7 +79,7 @@ class DealStatusHistory(db.Model):
     changed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     changed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    deal = db.relationship('Deal', backref='status_history')
+    deal = db.relationship('Deal', backref='deal_status_record', overlaps="deal_status_histories,deal_status_history_entry,deal_status_entries")
     user = db.relationship('User', backref='status_changes')
 
 class File(db.Model):
@@ -100,10 +114,40 @@ def csrf_exempt(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def get_deal_analytics():
+    if current_user.role.name == 'Admin':
+        deals = Deal.query.all()
+    else:
+        deals = Deal.query.filter_by(user_id=current_user.id).all()
+
+    # Analytics data
+    status_counts = defaultdict(int)
+    state_counts = defaultdict(int)
+    user_counts = defaultdict(int)
+    deals_by_month = defaultdict(int)
+
+    for deal in deals:
+        status_counts[deal.status] += 1
+        state_counts[deal.state] += 1
+        user_counts[deal.user_id] += 1
+        deals_by_month[deal.created_at.strftime('%Y-%m')] += 1
+
+    # Get user names for user_counts
+    user_names = {user.id: user.username for user in User.query.all()}
+    user_counts_formatted = {user_names[user_id]: count for user_id, count in user_counts.items()}
+
+    return {
+        'status_counts': dict(status_counts),
+        'state_counts': dict(state_counts),
+        'user_counts': user_counts_formatted,
+        'deals_by_month': dict(deals_by_month)
+    }
+
 @app.route('/')
 @login_required
 def home():
-    return render_template('home.html')
+    analytics = get_deal_analytics()
+    return render_template('home.html', analytics=analytics)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -224,8 +268,7 @@ def deals():
             if missing:
                 print(f"Missing fields: {missing}")
                 return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
-            if current_user.role.name != 'Admin' and not Deal.query.filter_by(user_id=current_user.id).first():
-                return jsonify({'error': 'Permission denied'}), 403
+            # Allow Users to create deals even if they have no existing deals
             new_deal = Deal(
                 deal_name=data.get('deal_name'),
                 state=data.get('state'),
@@ -311,6 +354,8 @@ def deal_modify(deal_id):
 
     if request.method == 'DELETE':
         try:
+            # Delete associated DealStatusHistory records first
+            DealStatusHistory.query.filter_by(deal_id=deal_id).delete()
             db.session.delete(deal)
             db.session.commit()
             print(f"Deal deleted: ID={deal_id}, User={current_user.username}")
@@ -393,17 +438,63 @@ def deal_detail(deal_id):
     status_history = DealStatusHistory.query.filter_by(deal_id=deal_id).order_by(DealStatusHistory.changed_at.desc()).all()
     return render_template('deal_detail.html', deal=deal, files=files, status_history=status_history)
 
+@app.route('/api/analytics', methods=['GET'])
+@login_required
+@check_permission('view_own')  # Allow Admins to see all, Users to see their own
+def get_analytics():
+    if current_user.role.name == 'Admin':
+        deals = Deal.query.all()
+    else:
+        deals = Deal.query.filter_by(user_id=current_user.id).all()
+
+    # Analytics data
+    status_counts = defaultdict(int)
+    state_counts = defaultdict(int)
+    user_counts = defaultdict(int)
+    deals_by_month = defaultdict(int)
+
+    for deal in deals:
+        status_counts[deal.status] += 1
+        state_counts[deal.state] += 1
+        user_counts[deal.user_id] += 1
+        deals_by_month[deal.created_at.strftime('%Y-%m')] += 1
+
+    # Get user names for user_counts
+    user_names = {user.id: user.username for user in User.query.all()}
+    user_counts_formatted = {user_names[user_id]: count for user_id, count in user_counts.items()}
+
+    return jsonify({
+        'status_counts': dict(status_counts),
+        'state_counts': dict(state_counts),
+        'user_counts': user_counts_formatted,
+        'deals_by_month': dict(deals_by_month)
+    })
+
 # Handle CSRF errors globally for API endpoints
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
     return jsonify({'error': 'CSRF token is missing or invalid'}), 400
 
 def notify_status_change(deal, user):
-    # For now, use console logs; add email logic later if needed
-    message = f"Status change for deal '{deal.deal_name}' (ID: {deal.id}): {deal.status} by {user.username} at {datetime.utcnow()}"
-    print(message)
+    # Send email notification if user has an email
     if user.email:
-        print(f"Would send email to {user.email}: {message}")  # Placeholder for email notification
+        try:
+            msg = MIMEText(f"Status change for deal '{deal.deal_name}' (ID: {deal.id}): {deal.status} by {user.username} at {datetime.utcnow()}")
+            msg['Subject'] = f"Deal Status Update: {deal.deal_name}"
+            msg['From'] = app.config['MAIL_USERNAME']
+            msg['To'] = user.email
+
+            with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+                server.starttls()
+                server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                server.send_message(msg)
+            print(f"Email notification sent to {user.email} for deal {deal.deal_name}")
+        except Exception as e:
+            print(f"Failed to send email notification: {str(e)}")
+    else:
+        # Fallback to console log if no email
+        message = f"Status change for deal '{deal.deal_name}' (ID: {deal.id}): {deal.status} by {user.username} at {datetime.utcnow()}"
+        print(message)
 
 with app.app_context():
     try:
