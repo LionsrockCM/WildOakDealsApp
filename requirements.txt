@@ -5,3 +5,6 @@ werkzeug
 Flask-WTF
 Flask-SSLify
 Flask-Migrate
+sqlalchemy
+python-dotenv
+smtplib  # For sending emails

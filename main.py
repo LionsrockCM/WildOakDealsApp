@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from pathlib import Path
 from datetime import datetime
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_sslify import SSLify
 from functools import wraps
 from flask_migrate import Migrate
@@ -36,6 +36,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)  # Increased length for hashed password
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False, default=2)  # Default to User (role_id=2)
+    email = db.Column(db.String(120), nullable=True)  # Optional email for notifications
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -45,7 +46,7 @@ class User(UserMixin, db.Model):
 
     @property
     def role(self):
-        return Role.query.get(self.role_id)
+        return db.session.get(Role, self.role_id)  # Updated for SQLAlchemy 2.0 compatibility
 
 class Deal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +57,16 @@ class Deal(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class DealStatusHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    changed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    changed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    deal = db.relationship('Deal', backref='status_history')
+    user = db.relationship('User', backref='status_changes')
 
 class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -69,6 +80,25 @@ class File(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+def check_permission(permission):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if current_user.role.name == 'Admin' or (permission == 'view_own' and 'own' in permission):
+                return f(*args, **kwargs)
+            if permission == 'admin_only' and current_user.role.name != 'Admin':
+                return jsonify({'error': 'Permission denied'}), 403
+            return jsonify({'error': 'Permission denied'}), 403
+        return decorated_function
+    return decorator
+
+# Custom decorator to handle CSRF for API endpoints
+def csrf_exempt(f):
+    def decorated_function(*args, **kwargs):
+        request.csrf_valid = True
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 @login_required
@@ -87,6 +117,27 @@ def login():
         return render_template('login.html', error='Invalid username or password')
     return render_template('login.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        email = request.form.get('email', None)  # Optional email field
+        if not username or not password:
+            return render_template('register.html', error='Username and password are required')
+        if User.query.filter_by(username=username).first():
+            return render_template('register.html', error='Username already exists')
+        user_role = Role.query.filter_by(name='User').first()
+        if not user_role:
+            return render_template('register.html', error='Default User role not found')
+        new_user = User(username=username, role_id=user_role.id, email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        print(f"New user registered: {username} as User")
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -94,15 +145,69 @@ def logout():
     print("User logged out")
     return redirect(url_for('login'))
 
-def check_permission(permission):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if current_user.role.name == 'Admin' or (permission == 'view_own' and 'own' in permission):
-                return f(*args, **kwargs)
-            return jsonify({'error': 'Permission denied'}), 403
-        return decorated_function
-    return decorator
+@app.route('/api/users', methods=['POST', 'PUT'])
+@login_required
+@check_permission('admin_only')
+@csrf_exempt  # Exempt CSRF for API endpoints (handled via header)
+def manage_users():
+    # Check for CSRF token in header if not exempted
+    if not hasattr(request, 'csrf_valid') and not request.headers.get('X-CSRFToken') == csrf.generate_csrf():
+        return jsonify({'error': 'CSRF token is missing or invalid'}), 400
+
+    if request.method == 'POST':
+        try:
+            if request.is_json:
+                data = request.json
+            else:
+                data = request.form.to_dict()
+            required_fields = ['username', 'password', 'role']
+            missing = [field for field in required_fields if not data.get(field)]
+            if missing:
+                print(f"Missing fields for user creation: {missing}")
+                return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
+            if User.query.filter_by(username=data.get('username')).first():
+                return jsonify({'error': 'Username already exists'}), 400
+            role = Role.query.filter_by(name=data.get('role')).first()
+            if not role:
+                return jsonify({'error': 'Invalid role'}), 400
+            new_user = User(username=data.get('username'), role_id=role.id, email=data.get('email', None))
+            new_user.set_password(data.get('password'))
+            db.session.add(new_user)
+            db.session.commit()
+            print(f"New user created by Admin: {data.get('username')} as {role.name}")
+            return jsonify({'message': 'User created successfully', 'username': new_user.username}), 201
+        except Exception as e:
+            print(f"Error creating user: {str(e)}")
+            return jsonify({'error': str(e)}), 400
+
+    if request.method == 'PUT':
+        try:
+            if request.is_json:
+                data = request.json
+            else:
+                data = request.form.to_dict()
+            required_fields = ['username', 'role']
+            missing = [field for field in required_fields if not data.get(field)]
+            if missing:
+                print(f"Missing fields for user update: {missing}")
+                return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
+            user = User.query.filter_by(username=data.get('username')).first()
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            role = Role.query.filter_by(name=data.get('role')).first()
+            if not role:
+                return jsonify({'error': 'Invalid role'}), 400
+            user.role_id = role.id
+            if 'password' in data:
+                user.set_password(data.get('password'))
+            if 'email' in data:
+                user.email = data.get('email')
+            db.session.commit()
+            print(f"User updated by Admin: {data.get('username')} to role {role.name}")
+            return jsonify({'message': 'User updated successfully', 'username': user.username}), 200
+        except Exception as e:
+            print(f"Error updating user: {str(e)}")
+            return jsonify({'error': str(e)}), 400
 
 @app.route('/api/deals', methods=['GET', 'POST'])
 @login_required
@@ -131,18 +236,28 @@ def deals():
             db.session.add(new_deal)
             db.session.commit()
             print(f"Deal added: ID={new_deal.id}, Name={new_deal.deal_name}, User={current_user.username}")
+            # Record initial status in history
+            status_history = DealStatusHistory(deal_id=new_deal.id, status=new_deal.status, changed_by_user_id=current_user.id)
+            db.session.add(status_history)
+            db.session.commit()
+            notify_status_change(new_deal, current_user)
             response = {
                 'id': new_deal.id,
                 'message': 'Deal added successfully',
                 'created_at': new_deal.created_at.isoformat(),
-                'updated_at': new_deal.created_at.isoformat()
+                'updated_at': new_deal.updated_at.isoformat()
             }
             return jsonify(response), 201
         except Exception as e:
             print(f"Error adding deal: {str(e)}")
             return jsonify({'error': str(e)}), 400
-    deals = Deal.query.filter_by(user_id=current_user.id).all()
-    print(f"Fetched {len(deals)} deals for user {current_user.id}")
+    # Fetch all deals for Admin, only user's deals for User
+    if current_user.role.name == 'Admin':
+        deals = Deal.query.all()
+        print(f"Fetched all {len(deals)} deals for Admin {current_user.id}")
+    else:
+        deals = Deal.query.filter_by(user_id=current_user.id).all()
+        print(f"Fetched {len(deals)} deals for user {current_user.id}")
     return jsonify([{
         'id': d.id,
         'deal_name': d.deal_name,
@@ -152,6 +267,57 @@ def deals():
         'created_at': d.created_at.isoformat(),
         'updated_at': d.updated_at.isoformat()
     } for d in deals])
+
+@app.route('/api/deals/<int:deal_id>', methods=['PUT', 'DELETE'])
+@login_required
+@check_permission('view_own')
+def deal_modify(deal_id):
+    deal = Deal.query.get_or_404(deal_id)
+    if deal.user_id != current_user.id and current_user.role.name != 'Admin':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    if request.method == 'PUT':
+        try:
+            if request.is_json:
+                data = request.json
+            else:
+                data = request.form.to_dict()
+            required_fields = ['deal_name', 'state', 'city', 'status']
+            missing = [field for field in required_fields if not data.get(field)]
+            if missing:
+                print(f"Missing fields for update: {missing}")
+                return jsonify({'error': f'Missing required field: {missing[0]}'}), 400
+            old_status = deal.status
+            deal.deal_name = data.get('deal_name', deal.deal_name)
+            deal.state = data.get('state', deal.state)
+            deal.city = data.get('city', deal.city)
+            deal.status = data.get('status', deal.status)
+            deal.updated_at = datetime.utcnow()
+            db.session.commit()
+            if old_status != deal.status:
+                status_history = DealStatusHistory(deal_id=deal_id, status=deal.status, changed_by_user_id=current_user.id)
+                db.session.add(status_history)
+                db.session.commit()
+                notify_status_change(deal, current_user)
+            print(f"Deal updated: ID={deal_id}, Name={deal.deal_name}, User={current_user.username}")
+            return jsonify({
+                'id': deal.id,
+                'message': 'Deal updated successfully',
+                'updated_at': deal.updated_at.isoformat()
+            }), 200
+        except Exception as e:
+            print(f"Error updating deal: {str(e)}")
+            return jsonify({'error': str(e)}), 400
+
+    if request.method == 'DELETE':
+        try:
+            db.session.delete(deal)
+            db.session.commit()
+            print(f"Deal deleted: ID={deal_id}, User={current_user.username}")
+            return jsonify({'message': 'Deal deleted successfully'}), 200
+        except Exception as e:
+            print(f"Error deleting deal: {str(e)}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/files/<int:deal_id>', methods=['GET', 'POST'])
 @login_required
@@ -224,7 +390,20 @@ def deal_detail(deal_id):
     if deal.user_id != current_user.id and current_user.role.name != 'Admin':
         return jsonify({'error': 'Permission denied'}), 403
     files = File.query.filter_by(deal_id=deal_id).all()
-    return render_template('deal_detail.html', deal=deal, files=files)
+    status_history = DealStatusHistory.query.filter_by(deal_id=deal_id).order_by(DealStatusHistory.changed_at.desc()).all()
+    return render_template('deal_detail.html', deal=deal, files=files, status_history=status_history)
+
+# Handle CSRF errors globally for API endpoints
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return jsonify({'error': 'CSRF token is missing or invalid'}), 400
+
+def notify_status_change(deal, user):
+    # For now, use console logs; add email logic later if needed
+    message = f"Status change for deal '{deal.deal_name}' (ID: {deal.id}): {deal.status} by {user.username} at {datetime.utcnow()}"
+    print(message)
+    if user.email:
+        print(f"Would send email to {user.email}: {message}")  # Placeholder for email notification
 
 with app.app_context():
     try:
