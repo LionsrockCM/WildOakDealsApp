@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Test runner script for WildOakDealsApp.
@@ -28,19 +27,27 @@ def run_tests(pattern=None, verbose=True):
     # Create test reports directory if it doesn't exist
     if not os.path.exists('test_reports'):
         os.makedirs('test_reports')
-    
+
     # Generate timestamp for the report file name
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     report_file = f'test_reports/test_report_{timestamp}.txt'
     print(f"Generating report in {report_file}")
-    
+
     # Build pytest command
     pytest_cmd = [sys.executable, "-m", "pytest"]
     if verbose:
         pytest_cmd.append("-v")
     if pattern:
         pytest_cmd.append(pattern)
+    if os.path.exists('tests'):
+        test_files = [os.path.join('tests', f) for f in os.listdir('tests') if f.startswith('test_') and f.endswith('.py')]
+        if test_files:
+            pytest_cmd.extend(test_files)
+        else:
+            print("Warning: No test_*.py files found in 'tests' directory.")
     
+
+
     # Capture output to file
     with open(report_file, 'w') as f:
         try:
@@ -48,19 +55,19 @@ def run_tests(pattern=None, verbose=True):
             f.write(process.stdout)
             f.write(process.stderr)
             f.write(f"\nTest run complete.\nExit code: {process.returncode}\n")
-            
+
             if process.returncode == 0:
                 f.write("All tests passed! ✅\n")
                 print("All tests passed! ✅")
             else:
                 f.write("Some tests failed. ❌\n")
                 print("Some tests failed. ❌")
-                
+
             print(f"Test run complete.\nExit code: {process.returncode}")
             print(process.stdout)
             print(process.stderr)
             return process.returncode
-            
+
         except Exception as e:
             error_msg = f"Error running tests: {str(e)}"
             f.write(error_msg + "\n")
@@ -73,7 +80,7 @@ def main():
     parser.add_argument('--quiet', action='store_true', help='Run with less output')
     parser.add_argument('--skip-deps', action='store_true', help='Skip dependency installation')
     args = parser.parse_args()
-    
+
     if not args.skip_deps:
         ensure_dependencies()
 
