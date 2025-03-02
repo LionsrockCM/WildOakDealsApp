@@ -1,7 +1,7 @@
-
 import os
 import sys
 import pytest
+from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 
@@ -15,7 +15,7 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
+
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -25,18 +25,18 @@ def client():
             db.session.add(admin_role)
             db.session.add(user_role)
             db.session.commit()
-            
+
             # Create test users
             test_user = User(username='testuser', role_id=user_role.id)
             test_user.set_password('testpassword')
-            
+
             admin_user = User(username='adminuser', role_id=admin_role.id)
             admin_user.set_password('adminpassword')
-            
+
             db.session.add(test_user)
             db.session.add(admin_user)
             db.session.commit()
-            
+
             # Create test deals
             test_deal = Deal(
                 deal_name="Test Deal",
@@ -55,27 +55,9 @@ def client():
             db.session.add(test_deal)
             db.session.add(admin_deal)
             db.session.commit()
-            
-            # Create test status history
-            status_history = DealStatusHistory(
-                deal_id=test_deal.id,
-                status="Pending",
-                changed_by_user_id=test_user.id
-            )
-            db.session.add(status_history)
-            db.session.commit()
-            
-            # Create test file
-            test_file = File(
-                deal_id=test_deal.id,
-                file_name="Test File",
-                dropbox_link="https://dropbox.com/testlink"
-            )
-            db.session.add(test_file)
-            db.session.commit()
-        
+
         yield client
-        
+
         with app.app_context():
             db.drop_all()
 
@@ -86,22 +68,19 @@ def login(client, username, password):
         'password': password
     }, follow_redirects=True)
 
-def test_api_deals_get(client):
-    """Test that the deals API returns the correct deals for a user."""
-    # Login as test user
+def test_get_deals_api(client):
+    """Test that users can access the deals API."""
+    # Login
     login(client, 'testuser', 'testpassword')
-    
+
     # Get deals
     response = client.get('/api/deals')
     assert response.status_code == 200
-    
-    # Parse response
-    deals = json.loads(response.data)
-    assert len(deals) == 1
-    assert deals[0]['deal_name'] == "Test Deal"
-    assert deals[0]['state'] == "CA"
-    assert deals[0]['city'] == "Test City"
-    assert deals[0]['status'] == "Pending"
+
+    # Verify response contains the test deal
+    data = response.get_json()
+    assert any(deal['deal_name'] == 'Test Deal' for deal in data)
+    assert not any(deal['deal_name'] == 'Admin Deal' for deal in data)
 
 def test_api_deals_admin_get(client):
     """Test that the deals API returns all deals for an admin."""

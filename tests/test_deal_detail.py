@@ -1,4 +1,3 @@
-
 import os
 import sys
 import pytest
@@ -14,7 +13,7 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
+
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -24,13 +23,13 @@ def client():
             db.session.add(admin_role)
             db.session.add(user_role)
             db.session.commit()
-            
+
             # Create test user
             test_user = User(username='testuser', role_id=user_role.id)
             test_user.set_password('testpassword')
             db.session.add(test_user)
             db.session.commit()
-            
+
             # Create test deal
             test_deal = Deal(
                 deal_name="Test Deal",
@@ -41,7 +40,7 @@ def client():
             )
             db.session.add(test_deal)
             db.session.commit()
-            
+
             # Create test status history
             status_history = DealStatusHistory(
                 deal_id=test_deal.id,
@@ -50,18 +49,18 @@ def client():
             )
             db.session.add(status_history)
             db.session.commit()
-            
+
             # Create test file
             test_file = File(
                 deal_id=test_deal.id,
                 file_name="Test File",
-                dropbox_link="https://dropbox.com/testlink"
+                dropbox_link="https://dropbox.com/test"
             )
             db.session.add(test_file)
             db.session.commit()
-        
+
         yield client
-        
+
         with app.app_context():
             db.drop_all()
 
@@ -143,11 +142,11 @@ def test_edit_deal_functionality(client):
     """Test that a user can edit their own deal."""
     # Login as test user
     login(client, 'testuser', 'testpassword')
-    
+
     # Get deal ID
     with app.app_context():
         deal_id = Deal.query.filter_by(deal_name="Test Deal").first().id
-    
+
     # Update deal
     response = client.put(f'/api/deals/{deal_id}', data={
         'deal_name': 'Updated Test Deal',
@@ -155,9 +154,9 @@ def test_edit_deal_functionality(client):
         'city': 'New City',
         'status': 'Active'
     })
-    
+
     assert response.status_code == 200
-    
+
     # Verify deal was updated
     with app.app_context():
         deal = Deal.query.get(deal_id)
@@ -166,7 +165,7 @@ def test_edit_deal_functionality(client):
         assert deal.state == 'NY'
         assert deal.city == 'New City'
         assert deal.status == 'Active'
-        
+
         # Verify status history was created
         status_history = DealStatusHistory.query.filter_by(deal_id=deal_id, status='Active').first()
         assert status_history is not None
