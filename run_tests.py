@@ -31,7 +31,7 @@ def run_tests():
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     report_file = f"test_reports/test_report_{timestamp}.txt"
 
-    # Construct pytest command
+    # Construct pytest command - added tests/test_ui_styling.py
     pytest_cmd = [
         sys.executable, "-m", "pytest", 
         "-v",  # Verbose output
