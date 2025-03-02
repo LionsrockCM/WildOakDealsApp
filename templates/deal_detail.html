@@ -1,108 +1,176 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Deal Details</title>
-    <!-- Add any additional CSS or meta tags here if needed -->
+    <title>Deal Details - Wild Oak Deals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <!-- User greeting and navigation links -->
-    <p>Welcome, {{ current_user.username }}!</p>
-    <a href="{{ url_for('home') }}">Back to Home</a>
-    <a href="{{ url_for('logout') }}">Logout</a>
-
-    <!-- Deal details section -->
-    <h1>Deal Details</h1>
-    {% if deal %}
-        <div>
-            <h2>{{ deal.deal_name }}</h2>
-            <p>State: {{ deal.state }}</p>
-            <p>City: {{ deal.city }}</p>
-            <p>Status: {{ deal.status }}</p>
-            <p>Created At: {{ deal.created_at }}</p>
-            <p>Updated At: {{ deal.updated_at }}</p>
-            <!-- Edit and Delete buttons -->
-            <button onclick="showEditForm()">Edit Deal</button>
-            <button onclick="deleteDeal({{ deal.id }})">Delete Deal</button>
+    <div class="navbar">
+        <a href="/" class="navbar-brand">Wild Oak Deals</a>
+        <div class="navbar-nav">
+            <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
         </div>
+    </div>
 
-        <!-- Edit form (initially hidden) -->
-        <div id="editForm" style="display: none;">
-            <h3>Edit Deal</h3>
-            <div id="editSuccessMessage" style="display: none; color: green; margin-bottom: 10px;">Deal updated successfully!</div>
-            <form id="editDealForm" action="{{ url_for('deal_modify', deal_id=deal.id) }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div>
-                    <label for="edit_deal_name">Deal Name:</label>
-                    <input type="text" id="edit_deal_name" name="deal_name" value="{{ deal.deal_name }}" required>
-                    <span class="error-message" id="edit_deal_name_error"></span>
+    <div class="container">
+        <div class="row mt-3">
+            <div class="welcome-message">Welcome, {{ current_user.username }}!</div>
+
+            <!-- Deal details section -->
+            {% if deal %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>{{ deal.deal_name }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="deal-info">
+                            <div class="info-item">
+                                <span class="info-label">State:</span>
+                                <span class="info-value">{{ deal.state }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">City:</span>
+                                <span class="info-value">{{ deal.city }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value status-badge">{{ deal.status }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Created:</span>
+                                <span class="info-value">{{ deal.created_at }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Updated:</span>
+                                <span class="info-value">{{ deal.updated_at }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons mt-3">
+                            <button class="btn btn-primary" onclick="showEditForm()">Edit Deal</button>
+                            <button class="btn btn-danger" onclick="deleteDeal({{ deal.id }})">Delete Deal</button>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="edit_state">State:</label>
-                    <input type="text" id="edit_state" name="state" value="{{ deal.state }}" required>
-                    <span class="error-message" id="edit_state_error"></span>
+
+                <!-- Edit form (initially hidden) -->
+                <div id="editForm" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3>Edit Deal</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="editSuccessMessage" style="display: none;" class="alert alert-success mb-3">Deal updated successfully!</div>
+                            <form id="editDealForm" action="{{ url_for('deal_modify', deal_id=deal.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-group">
+                                    <label for="edit_deal_name" class="form-label">Deal Name</label>
+                                    <input type="text" id="edit_deal_name" name="deal_name" value="{{ deal.deal_name }}" class="form-control" required>
+                                    <span class="error-message" id="edit_deal_name_error"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_state" class="form-label">State</label>
+                                    <input type="text" id="edit_state" name="state" value="{{ deal.state }}" class="form-control" required>
+                                    <span class="error-message" id="edit_state_error"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_city" class="form-label">City</label>
+                                    <input type="text" id="edit_city" name="city" value="{{ deal.city }}" class="form-control" required>
+                                    <span class="error-message" id="edit_city_error"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_status" class="form-label">Status</label>
+                                    <input type="text" id="edit_status" name="status" value="{{ deal.status }}" class="form-control" required>
+                                    <span class="error-message" id="edit_status_error"></span>
+                                </div>
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn btn-primary">Update Deal</button>
+                                    <button type="button" class="btn btn-secondary" onclick="hideEditForm()">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="edit_city">City:</label>
-                    <input type="text" id="edit_city" name="city" value="{{ deal.city }}" required>
-                    <span class="error-message" id="edit_city_error"></span>
+
+                <!-- Status History Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Status History</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if status_history %}
+                            <ul class="history-list">
+                            {% for history in status_history %}
+                                <li class="history-item">
+                                    <span class="status-badge">{{ history.status }}</span> changed by 
+                                    <span class="user-badge">{{ history.user.username }}</span> on 
+                                    <span class="date-badge">{{ history.changed_at }}</span>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="no-data-message">No status history for this deal.</p>
+                        {% endif %}
+                    </div>
                 </div>
-                <div>
-                    <label for="edit_status">Status:</label>
-                    <input type="text" id="edit_status" name="status" value="{{ deal.status }}" required>
-                    <span class="error-message" id="edit_status_error"></span>
+            {% else %}
+                <div class="alert alert-error">No deal found.</div>
+            {% endif %}
+
+            <!-- Associated files section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Associated Files</h3>
                 </div>
-                <button type="submit">Update Deal</button>
-                <button type="button" onclick="hideEditForm()">Cancel</button>
-            </form>
+                <div class="card-body">
+                    {% if files %}
+                        <ul id="fileList" class="file-list">
+                        {% for file in files %}
+                            <li class="file-item">
+                                <span class="file-name">{{ file.file_name }}</span>
+                                <div class="file-actions">
+                                    <a href="{{ file.dropbox_link }}" target="_blank" class="btn btn-sm btn-primary">View on Dropbox</a>
+                                    <a href="#" onclick="deleteFile({{ file.id }}, event);" class="btn btn-sm btn-danger">Delete</a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="no-data-message">No files associated with this deal.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- File upload form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Upload New File</h3>
+                </div>
+                <div class="card-body">
+                    <div id="fileSuccessMessage" style="display: none;" class="alert alert-success mb-3">File uploaded successfully!</div>
+                    <form id="fileForm" action="{{ url_for('files', deal_id=deal.id) }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label for="file_name" class="form-label">File Name</label>
+                            <input type="text" id="file_name" name="file_name" class="form-control" required>
+                            <span class="error-message" id="file_name_error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="dropbox_link" class="form-label">Dropbox Link</label>
+                            <input type="text" id="dropbox_link" name="dropbox_link" class="form-control" required>
+                            <span class="error-message" id="dropbox_link_error"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload File</button>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <!-- Status History Section -->
-        <h2>Status History</h2>
-        {% if status_history %}
-            <ul>
-            {% for history in status_history %}
-                <li>{{ history.status }} changed by {{ history.user.username }} on {{ history.changed_at }}</li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No status history for this deal.</p>
-        {% endif %}
-    {% else %}
-        <p>No deal found.</p>
-    {% endif %}
-
-    <!-- Associated files section -->
-    <h2>Associated Files</h2>
-    {% if files %}
-        <ul id="fileList">
-        {% for file in files %}
-            <li>{{ file.file_name }} - <a href="{{ file.dropbox_link }}" target="_blank">View on Dropbox</a> 
-                <a href="#" onclick="deleteFile({{ file.id }}, event); return false;">Delete</a></li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No files associated with this deal.</p>
-    {% endif %}
-
-    <!-- File upload form -->
-    <h2>Upload New File</h2>
-    <div id="fileSuccessMessage" style="display: none; color: green; margin-bottom: 10px;">File uploaded successfully!</div>
-    <form id="fileForm" action="{{ url_for('files', deal_id=deal.id) }}" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div>
-            <label for="file_name">File Name:</label>
-            <input type="text" id="file_name" name="file_name" required>
-            <span class="error-message" id="file_name_error"></span>
-        </div>
-        <div>
-            <label for="dropbox_link">Dropbox Link:</label>
-            <input type="text" id="dropbox_link" name="dropbox_link" required>
-            <span class="error-message" id="dropbox_link_error"></span>
-        </div>
-        <button type="submit">Upload File</button>
-    </form>
+    </div>
 
     <!-- JavaScript for file and deal management -->
     <script>
@@ -205,16 +273,22 @@
                 console.log('Files data received:', data);
                 const fileList = document.getElementById('fileList');
                 if (fileList) {
-                    fileList.innerHTML = '';
                     if (data.length > 0) {
+                        fileList.innerHTML = '';
                         data.forEach(file => {
                             const li = document.createElement('li');
-                            li.innerHTML = `${file.file_name} - <a href="${file.dropbox_link}" target="_blank">View on Dropbox</a> 
-                                <a href="#" onclick="deleteFile(${file.id}, event); return false;">Delete</a>`;
+                            li.className = 'file-item';
+                            li.innerHTML = `
+                                <span class="file-name">${file.file_name}</span>
+                                <div class="file-actions">
+                                    <a href="${file.dropbox_link}" target="_blank" class="btn btn-sm btn-primary">View on Dropbox</a>
+                                    <a href="#" onclick="deleteFile(${file.id}, event);" class="btn btn-sm btn-danger">Delete</a>
+                                </div>
+                            `;
                             fileList.appendChild(li);
                         });
                     } else {
-                        fileList.innerHTML = '<p>No files associated with this deal.</p>';
+                        fileList.innerHTML = '<p class="no-data-message">No files associated with this deal.</p>';
                     }
                 }
             })
@@ -267,13 +341,12 @@
                         if (data.message) {
                             fileSuccessMessage.textContent = data.message;
                             fileSuccessMessage.style.display = 'block';
-                            fileSuccessMessage.style.color = 'green';
                             fileForm.reset();
                             setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
                             fetchFiles(); // Refresh file list
                         } else if (data.error) {
                             fileSuccessMessage.textContent = data.error;
-                            fileSuccessMessage.style.color = 'red';
+                            fileSuccessMessage.style.color = 'var(--color-error)';
                             fileSuccessMessage.style.display = 'block';
                             setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
                         }
@@ -281,7 +354,7 @@
                     .catch(error => {
                         console.error('File submission error:', error);
                         fileSuccessMessage.textContent = error.message || 'An error occurred';
-                        fileSuccessMessage.style.color = 'red';
+                        fileSuccessMessage.style.color = 'var(--color-error)';
                         fileSuccessMessage.style.display = 'block';
                         setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
                     });
@@ -326,14 +399,13 @@
                             if (data.message) {
                                 editSuccessMessage.textContent = data.message;
                                 editSuccessMessage.style.display = 'block';
-                                editSuccessMessage.style.color = 'green';
                                 hideEditForm();
                                 setTimeout(() => editSuccessMessage.style.display = 'none', 3000);
                                 // Optionally, refresh the page or update UI to reflect changes
                                 window.location.reload();  // Reload to show updated deal details and status history
                             } else if (data.error) {
                                 editSuccessMessage.textContent = data.error;
-                                editSuccessMessage.style.color = 'red';
+                                editSuccessMessage.style.color = 'var(--color-error)';
                                 editSuccessMessage.style.display = 'block';
                                 setTimeout(() => editSuccessMessage.style.display = 'none', 3000);
                             }
@@ -341,7 +413,7 @@
                         .catch(error => {
                             console.error('Error updating deal:', error);
                             editSuccessMessage.textContent = error.message || 'An error occurred';
-                            editSuccessMessage.style.color = 'red';
+                            editSuccessMessage.style.color = 'var(--color-error)';
                             editSuccessMessage.style.display = 'block';
                             setTimeout(() => editSuccessMessage.style.display = 'none', 3000);
                         });
@@ -350,7 +422,6 @@
             }
 
             function validateField(field, formType) {
-                console.log('validateField called for field:', field ? field.id : 'undefined');
                 if (!field) {
                     console.error('Field is undefined');
                     return true;
@@ -363,7 +434,7 @@
                     }
                     if (!field.value || !field.value.trim()) {
                         errorElement.textContent = 'Field required';
-                        errorElement.style.color = 'red';
+                        errorElement.style.color = 'var(--color-error)';
                         return false;
                     }
                     errorElement.textContent = '';
