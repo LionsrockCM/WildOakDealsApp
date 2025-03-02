@@ -4,45 +4,46 @@
 Test runner script for WildOakDealsApp.
 Runs all tests and generates a report.
 """
-import pytest
-import os
 import sys
-from datetime import datetime
-
-# Create directories if they don't exist
-os.makedirs('tests', exist_ok=True)
-os.makedirs('test_reports', exist_ok=True)
-
-# Create __init__.py files to make directories into packages
-with open('tests/__init__.py', 'w') as f:
-    f.write('# Tests package\n')
+import os
+import argparse
+from test_utils import run_tests, create_test_file
 
 def main():
-    """Run all tests and generate a report."""
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    report_file = f'test_reports/test_report_{timestamp}.txt'
+    """Run the test utility with command line arguments."""
+    parser = argparse.ArgumentParser(description='WildOakDealsApp test runner')
+    parser.add_argument('--create', metavar='MODULE', help='Create a test file for MODULE')
+    parser.add_argument('--test-funcs', metavar='FUNCS', help='Comma-separated list of test functions to create')
+    parser.add_argument('--run', metavar='PATTERN', help='Run tests matching PATTERN')
+    parser.add_argument('--all', action='store_true', help='Run all tests')
     
-    print(f"Running tests for WildOakDealsApp...")
-    print(f"Generating report in {report_file}")
+    args = parser.parse_args()
     
-    # Run the tests
-    exit_code = pytest.main([
-        '-v',
-        'tests/',
-        f'--tb=native',
-        '--color=yes'
-    ])
+    # Create test directory and __init__.py if they don't exist
+    os.makedirs('tests', exist_ok=True)
+    init_file = os.path.join('tests', '__init__.py')
+    if not os.path.exists(init_file):
+        with open(init_file, 'w') as f:
+            f.write('# Tests package\n')
     
-    # Print summary
-    print("\nTest run complete.")
-    print(f"Exit code: {exit_code}")
+    # Create test reports directory if it doesn't exist
+    os.makedirs('test_reports', exist_ok=True)
     
-    if exit_code == 0:
-        print("All tests passed! ✅")
-    else:
-        print("Some tests failed. ❌")
+    if args.create:
+        test_funcs = []
+        if args.test_funcs:
+            test_funcs = args.test_funcs.split(',')
+        create_test_file(args.create, test_funcs)
+        return 0
     
-    return exit_code
+    if args.run:
+        return run_tests(args.run)
+    
+    if args.all or len(sys.argv) == 1:
+        return run_tests()
+    
+    parser.print_help()
+    return 1
 
 if __name__ == '__main__':
     sys.exit(main())
