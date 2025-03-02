@@ -15,7 +15,7 @@ def ensure_dependencies():
     required_packages = ['pytest', 'beautifulsoup4', 'pytest-flask']
     for package in required_packages:
         try:
-            __import__(package.replace('-', '_'))
+            __import__(package.split('-')[0])
             print(f"{package} is already installed.")
         except ImportError:
             print(f"Installing {package} for tests...")
@@ -44,7 +44,7 @@ def run_tests(pattern=None, verbose=True):
     # Capture output to file
     with open(report_file, 'w') as f:
         try:
-            process = subprocess.run(pytest_cmd, capture_output=True, text=True)
+            process = subprocess.run(pytest_cmd, capture_output=True, text=True, cwd=os.getcwd())
             f.write(process.stdout)
             f.write(process.stderr)
             f.write(f"\nTest run complete.\nExit code: {process.returncode}\n")

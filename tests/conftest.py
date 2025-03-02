@@ -2,8 +2,6 @@
 import os
 import sys
 import pytest
-import json
-from flask import url_for
 
 # Add parent directory to path so we can import the app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -37,44 +35,36 @@ def client():
         with app.app_context():
             db.drop_all()
 
+@pytest.fixture
+def authenticated_client(client):
+    """Create a test client that's already logged in."""
+    client.post('/login', data={
+        'username': 'testuser',
+        'password': 'testpassword'
+    }, follow_redirects=True)
+    return client
+
+@pytest.fixture
+def test_deal(client):
+    """Create a test deal in the database."""
+    login(client, 'testuser', 'testpassword')
+    
+    with app.app_context():
+        test_user = User.query.filter_by(username='testuser').first()
+        test_deal = Deal(
+            deal_name='Test Deal',
+            state='California',
+            city='Los Angeles',
+            status='Pending',
+            user_id=test_user.id
+        )
+        db.session.add(test_deal)
+        db.session.commit()
+        return test_deal.id
+
 def login(client, username, password):
     """Helper function to log in a user."""
     return client.post('/login', data={
         'username': username,
         'password': password
     }, follow_redirects=True)
-
-def test_api_login_required(client):
-    """Test that API endpoints require login."""
-    response = client.get('/api/deals')
-    assert response.status_code == 401 or response.status_code == 302
-
-def test_api_deals_get(client):
-    """Test getting deals after login."""
-    login(client, 'testuser', 'testpassword')
-    response = client.get('/api/deals')
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert isinstance(data, list)
-
-def test_api_deals_post(client):
-    """Test creating a new deal."""
-    login(client, 'testuser', 'testpassword')
-    response = client.post('/api/deals', data={
-        'deal_name': 'Test Deal',
-        'state': 'California',
-        'city': 'Los Angeles',
-        'status': 'Pending'
-    })
-    assert response.status_code == 201 or response.status_code == 200
-    data = json.loads(response.data)
-    assert 'message' in data
-
-def test_api_analytics(client):
-    """Test analytics endpoint."""
-    login(client, 'testuser', 'testpassword')
-    response = client.get('/api/analytics')
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'status_counts' in data
-    assert 'state_counts' in data
