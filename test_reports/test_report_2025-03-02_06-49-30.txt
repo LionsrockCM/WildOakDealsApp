@@ -1,0 +1,3 @@
+Test run complete.
+Exit code: 2
+Some tests failed. ❌

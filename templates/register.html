@@ -1,20 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Wild Oak Deals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>Register</h1>
-    <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div><label>Username: <input type="text" name="username" required></label></div>
-        <div><label>Password: <input type="password" name="password" required></label></div>
-        <div><label>Email (optional): <input type="email" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"></label></div>
-        <button type="submit">Register</button>
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
-    </form>
+    <div class="navbar">
+        <a href="/" class="navbar-brand">Wild Oak Deals</a>
+    </div>
+    
+    <div class="container">
+        <div class="row mt-3">
+            <div style="max-width: 450px; margin: 0 auto;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="text-center" style="margin: 0;">Register</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if error %}
+                            <div class="alert alert-error">{{ error }}</div>
+                        {% endif %}
+                        
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" class="form-control" required autofocus>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email (optional)</label>
+                                <input type="email" id="email" name="email" class="form-control" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                        </form>
+                        
+                        <div class="text-center mt-2">
+                            <p>Already have an account? <a href="{{ url_for('login') }}" style="color: var(--color-gold);">Login</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

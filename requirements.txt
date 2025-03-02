@@ -7,3 +7,5 @@ Flask-SSLify
 Flask-Migrate
 sqlalchemy
 python-dotenv
+pytest
+beautifulsoup4
