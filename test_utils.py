@@ -1,68 +1,72 @@
 
+"""
+Utility functions for testing WildOakDealsApp.
+"""
 import os
 import sys
-import pytest
 import datetime
-from pathlib import Path
-from bs4 import BeautifulSoup
-
-# Add parent directory to path so we can import the app
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from main import app, db, User, Role
+import pytest
+import subprocess
 
 def run_tests(pattern=None, verbose=True):
-    """
-    Run tests matching the given pattern.
+    """Run tests and generate a report."""
+    # Create test reports directory if it doesn't exist
+    if not os.path.exists('test_reports'):
+        os.makedirs('test_reports')
     
-    Args:
-        pattern (str): Pattern to match test files
-        verbose (bool): Run with verbose output
-    """
-    args = ['tests/']
-    if pattern:
-        args = [f'tests/test_{pattern}.py']
-    
-    if verbose:
-        args.append('-v')
-    
+    # Generate timestamp for the report file name
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    report_dir = Path('test_reports')
-    if not report_dir.exists():
-        report_dir.mkdir()
+    report_file = f'test_reports/test_report_{timestamp}.txt'
     
-    report_file = report_dir / f'test_report_{timestamp}.txt'
-    print(f"Running tests for WildOakDealsApp...")
-    print(f"Generating report in {report_file}")
+    # Build pytest arguments
+    pytest_args = ['-v'] if verbose else []
+    if pattern:
+        pytest_args.append(pattern)
     
-    exit_code = pytest.main(args)
-    
-    print("\nTest run complete.")
-    print(f"Exit code: {exit_code}")
-    
-    if exit_code == 0:
-        print("All tests passed! ✅")
-    else:
-        print("Some tests failed. ❌")
-    
-    return exit_code
+    # Run pytest and capture output to file
+    with open(report_file, 'w') as f:
+        try:
+            exit_code = pytest.main(pytest_args)
+            f.write(f"Test run complete.\nExit code: {exit_code}\n")
+            if exit_code == 0:
+                f.write("All tests passed! ✅\n")
+            else:
+                f.write("Some tests failed. ❌\n")
+            return exit_code
+        except Exception as e:
+            error_msg = f"Error running tests: {str(e)}"
+            f.write(error_msg + "\n")
+            print(error_msg)
+            return 1
 
-def create_test_file(feature_name, test_functions=None):
+def create_test_file(component, test_type="ui"):
     """
-    Create a new test file with the given feature name and test functions.
+    Create a new test file for a component.
     
     Args:
-        feature_name (str): Name of the feature being tested
-        test_functions (list): List of test function names to create
+        component (str): Name of the component to test
+        test_type (str): Type of test - ui, api, etc.
     
     Returns:
         str: Path to the created test file
     """
-    if test_functions is None:
-        test_functions = []
+    test_file = f"tests/test_{component}_{test_type}.py"
     
-    test_file = f'tests/test_{feature_name}.py'
+    # Create tests directory if it doesn't exist
+    if not os.path.exists('tests'):
+        os.makedirs('tests')
+        # Create __init__.py in tests directory
+        with open('tests/__init__.py', 'w') as f:
+            f.write('# Tests package\n')
     
-    template = '''import os
+    # Don't overwrite existing files
+    if os.path.exists(test_file):
+        print(f"Test file {test_file} already exists, skipping creation.")
+        return test_file
+    
+    # Create basic test template
+    with open(test_file, 'w') as f:
+        f.write(f"""import os
 import sys
 import pytest
 from bs4 import BeautifulSoup
@@ -73,11 +77,11 @@ from main import app, db, User, Role
 
 @pytest.fixture
 def client():
-    """Create a test client for the app."""
+    \"\"\"Create a test client for the app.\"\"\"
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
+
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -87,42 +91,29 @@ def client():
             db.session.add(admin_role)
             db.session.add(user_role)
             db.session.commit()
-            
+
             # Create test user
             test_user = User(username='testuser', role_id=user_role.id)
             test_user.set_password('testpassword')
             db.session.add(test_user)
             db.session.commit()
-        
+
         yield client
-        
+
         with app.app_context():
             db.drop_all()
 
 def login(client, username, password):
-    """Helper function to log in a user."""
-    return client.post('/login', data={
+    \"\"\"Helper function to log in a user.\"\"\"
+    return client.post('/login', data={{
         'username': username,
         'password': password
-    }, follow_redirects=True)
-'''
-    
-    # Add test functions
-    for func_name in test_functions:
-        template += f'''
-def {func_name}(client):
-    """Test for {func_name}."""
-    # TODO: Implement test
+    }}, follow_redirects=True)
+
+def test_{component}_basic():
+    \"\"\"Basic test for {component}.\"\"\"
     assert True
-'''
-    
-    with open(test_file, 'w') as f:
-        f.write(template.strip())
+""")
     
     print(f"Created test file: {test_file}")
     return test_file
-
-if __name__ == '__main__':
-    # Example usage:
-    # create_test_file('new_feature', ['test_feature_works', 'test_feature_edge_case'])
-    run_tests()

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 Test runner script for WildOakDealsApp.
@@ -7,7 +8,8 @@ import sys
 import os
 import argparse
 import subprocess
-from test_utils import run_tests, create_test_file
+import pytest
+import datetime
 
 def ensure_dependencies():
     """Check and install any missing dependencies for tests."""
@@ -18,6 +20,44 @@ def ensure_dependencies():
         print("Installing BeautifulSoup for tests...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "beautifulsoup4"])
         print("BeautifulSoup installed successfully.")
+
+def run_tests(pattern=None, verbose=True):
+    """Run tests and generate a report."""
+    print("Running tests for WildOakDealsApp...")
+    # Create test reports directory if it doesn't exist
+    if not os.path.exists('test_reports'):
+        os.makedirs('test_reports')
+    
+    # Generate timestamp for the report file name
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    report_file = f'test_reports/test_report_{timestamp}.txt'
+    print(f"Generating report in {report_file}")
+    
+    # Build pytest arguments
+    pytest_args = ['-v'] if verbose else []
+    if pattern:
+        pytest_args.append(pattern)
+    
+    # Run pytest and capture output to file
+    with open(report_file, 'w') as f:
+        try:
+            exit_code = pytest.main(pytest_args)
+            f.write(f"Test run complete.\nExit code: {exit_code}\n")
+            if exit_code == 0:
+                f.write("All tests passed! ✅\n")
+            else:
+                f.write("Some tests failed. ❌\n")
+            print(f"Test run complete.\nExit code: {exit_code}")
+            if exit_code == 0:
+                print("All tests passed! ✅")
+            else:
+                print("Some tests failed. ❌")
+            return exit_code
+        except Exception as e:
+            error_msg = f"Error running tests: {str(e)}"
+            f.write(error_msg + "\n")
+            print(error_msg)
+            return 1
 
 def main():
     parser = argparse.ArgumentParser(description='Run tests for WildOakDealsApp')
