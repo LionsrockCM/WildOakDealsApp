@@ -256,7 +256,7 @@
                     <div class="card-body">
                         <div id="successMessage" style="display: none;" class="alert alert-success mb-3">Deal added successfully!</div>
                         <form id="dealForm" action="/api/deals" method="POST">
-                            {{ csrf_token() }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label for="deal_name" class="form-label">Deal Name</label>
                                 <input type="text" id="deal_name" name="deal_name" class="form-control" required>
@@ -376,7 +376,7 @@
                     <div class="card-body">
                         <div id="fileSuccessMessage" style="display: none;" class="alert alert-success mb-3">File uploaded successfully!</div>
                         <form id="fileForm" action="/api/files/" method="POST">
-                            {{ csrf_token() }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label for="deal_id" class="form-label">Deal ID</label>
                                 <input type="number" id="deal_id" name="deal_id" class="form-control" required>
