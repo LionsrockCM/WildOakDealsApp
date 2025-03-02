@@ -1,0 +1,52 @@
+============================= test session starts ==============================
+collecting ... collected 3 items / 4 errors
+
+==================================== ERRORS ====================================
+______________________ ERROR collecting tests/test_api.py ______________________
+ImportError while importing test module '/home/runner/workspace/tests/test_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_api.py:9: in <module>
+    from conftest import login
+E   ModuleNotFoundError: No module named 'conftest'
+------------------------------- Captured stdout --------------------------------
+Database tables and roles created successfully
+__________________ ERROR collecting tests/test_deal_detail.py __________________
+ImportError while importing test module '/home/runner/workspace/tests/test_deal_detail.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_deal_detail.py:9: in <module>
+    from conftest import login
+E   ModuleNotFoundError: No module named 'conftest'
+______________________ ERROR collecting tests/test_ui.py _______________________
+ImportError while importing test module '/home/runner/workspace/tests/test_ui.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_ui.py:9: in <module>
+    from conftest import login
+E   ModuleNotFoundError: No module named 'conftest'
+__________________ ERROR collecting tests/test_ui_styling.py ___________________
+ImportError while importing test module '/home/runner/workspace/tests/test_ui_styling.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_ui_styling.py:4: in <module>
+    from conftest import login
+E   ModuleNotFoundError: No module named 'conftest'
+=========================== short test summary info ============================
+ERROR tests/test_api.py
+ERROR tests/test_deal_detail.py
+ERROR tests/test_ui.py
+ERROR tests/test_ui_styling.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+============================== 4 errors in 0.27s ===============================
+
+Test run complete.
+Exit code: 2
