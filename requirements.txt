@@ -7,3 +7,4 @@ Flask-SSLify
 Flask-Migrate
 sqlalchemy
 python-dotenv
+pytest
