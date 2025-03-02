@@ -151,13 +151,25 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form['username']).first()
-        if user and user.check_password(request.form['password']):
-            login_user(user, remember=True)
-            print(f"User {user.username} logged in as {user.role.name}")
-            return redirect(url_for('home'))
-        print("Login failed: Invalid username or password")
-        return render_template('login.html', error='Invalid username or password')
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            
+            if not username or not password:
+                print("Login failed: Missing username or password")
+                return render_template('login.html', error='Username and password are required')
+                
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user, remember=True)
+                print(f"User {user.username} logged in as {user.role.name}")
+                return redirect(url_for('home'))
+            
+            print("Login failed: Invalid username or password")
+            return render_template('login.html', error='Invalid username or password')
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            return render_template('login.html', error='An error occurred during login')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
