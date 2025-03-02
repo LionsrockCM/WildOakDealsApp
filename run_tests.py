@@ -1,52 +1,46 @@
 #!/usr/bin/env python3
 """
-Test runner script for WildOakDealsApp.
-Runs all tests and generates a report.
+Test runner for WildOakDealsApp
+Runs all tests and generates a report
 """
-import sys
 import os
-import argparse
+import sys
 import subprocess
 import datetime
+import importlib.util
 
-def ensure_dependencies():
-    """Check and install any missing dependencies for tests."""
+def check_and_install_requirements():
+    """Check if required packages are installed and install them if necessary."""
     required_packages = ['pytest', 'beautifulsoup4', 'pytest-flask']
     for package in required_packages:
         try:
-            __import__(package.split('-')[0])
+            importlib.import_module(package.split('-')[0])
             print(f"{package} is already installed.")
         except ImportError:
             print(f"Installing {package} for tests...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            print(f"{package} installed successfully.")
+            subprocess.run([sys.executable, "-m", "pip", "install", package], check=True)
 
-def run_tests(pattern=None, verbose=True):
-    """Run tests and generate a report."""
-    print("Running tests for WildOakDealsApp...")
-    # Create test reports directory if it doesn't exist
-    if not os.path.exists('test_reports'):
-        os.makedirs('test_reports')
+def run_tests():
+    """Run all tests and generate a report."""
+    check_and_install_requirements()
 
-    # Generate timestamp for the report file name
+    # Create directory for test reports if it doesn't exist
+    os.makedirs("test_reports", exist_ok=True)
+
+    # Generate timestamp for the report file
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    report_file = f'test_reports/test_report_{timestamp}.txt'
-    print(f"Generating report in {report_file}")
+    report_file = f"test_reports/test_report_{timestamp}.txt"
 
-    # Build pytest command
-    pytest_cmd = [sys.executable, "-m", "pytest"]
-    if verbose:
-        pytest_cmd.append("-v")
-    if pattern:
-        pytest_cmd.append(pattern)
-    if os.path.exists('tests'):
-        test_files = [os.path.join('tests', f) for f in os.listdir('tests') if f.startswith('test_') and f.endswith('.py')]
-        if test_files:
-            pytest_cmd.extend(test_files)
-        else:
-            print("Warning: No test_*.py files found in 'tests' directory.")
-    
+    # Construct pytest command
+    pytest_cmd = [
+        sys.executable, "-m", "pytest", 
+        "-v",  # Verbose output
+        "tests/",  # Test directory
+        "--no-header"  # Remove header to make output cleaner
+    ]
 
+    print(f"Running tests with command: {' '.join(pytest_cmd)}")
+    print(f"Test report will be saved to: {report_file}")
 
     # Capture output to file
     with open(report_file, 'w') as f:
@@ -56,35 +50,22 @@ def run_tests(pattern=None, verbose=True):
             f.write(process.stderr)
             f.write(f"\nTest run complete.\nExit code: {process.returncode}\n")
 
-            if process.returncode == 0:
-                f.write("All tests passed! ✅\n")
-                print("All tests passed! ✅")
-            else:
-                f.write("Some tests failed. ❌\n")
-                print("Some tests failed. ❌")
+            # Print summary to console
+            print("\nTest results summary:")
+            print(f"Exit code: {process.returncode}")
 
-            print(f"Test run complete.\nExit code: {process.returncode}")
-            print(process.stdout)
-            print(process.stderr)
-            return process.returncode
+            # Print a simple summary of passed/failed tests
+            if "failed" in process.stdout:
+                for line in process.stdout.split('\n'):
+                    if "FAILED" in line or "PASSED" in line:
+                        print(line)
+            else:
+                print("All tests passed!")
 
         except Exception as e:
             error_msg = f"Error running tests: {str(e)}"
-            f.write(error_msg + "\n")
+            f.write(error_msg)
             print(error_msg)
-            return 1
 
-def main():
-    parser = argparse.ArgumentParser(description='Run tests for WildOakDealsApp')
-    parser.add_argument('--pattern', help='Pattern to match test files')
-    parser.add_argument('--quiet', action='store_true', help='Run with less output')
-    parser.add_argument('--skip-deps', action='store_true', help='Skip dependency installation')
-    args = parser.parse_args()
-
-    if not args.skip_deps:
-        ensure_dependencies()
-
-    return run_tests(pattern=args.pattern, verbose=not args.quiet)
-
-if __name__ == '__main__':
-    sys.exit(main())
+if __name__ == "__main__":
+    run_tests()
