@@ -5,7 +5,6 @@ Utility functions for testing WildOakDealsApp.
 import os
 import sys
 import datetime
-import pytest
 import subprocess
 
 def run_tests(pattern=None, verbose=True):
@@ -18,21 +17,28 @@ def run_tests(pattern=None, verbose=True):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     report_file = f'test_reports/test_report_{timestamp}.txt'
     
-    # Build pytest arguments
-    pytest_args = ['-v'] if verbose else []
+    # Build pytest command
+    pytest_cmd = [sys.executable, "-m", "pytest"]
+    if verbose:
+        pytest_cmd.append("-v")
     if pattern:
-        pytest_args.append(pattern)
+        pytest_cmd.append(pattern)
     
-    # Run pytest and capture output to file
+    # Capture output to file
     with open(report_file, 'w') as f:
         try:
-            exit_code = pytest.main(pytest_args)
-            f.write(f"Test run complete.\nExit code: {exit_code}\n")
-            if exit_code == 0:
+            process = subprocess.run(pytest_cmd, capture_output=True, text=True)
+            f.write(process.stdout)
+            f.write(process.stderr)
+            f.write(f"\nTest run complete.\nExit code: {process.returncode}\n")
+            
+            if process.returncode == 0:
                 f.write("All tests passed! ✅\n")
             else:
                 f.write("Some tests failed. ❌\n")
-            return exit_code
+                
+            return process.returncode
+            
         except Exception as e:
             error_msg = f"Error running tests: {str(e)}"
             f.write(error_msg + "\n")

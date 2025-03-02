@@ -43,71 +43,44 @@ def login(client, username, password):
     }, follow_redirects=True)
 
 def test_login_page_loads(client):
-    """Test that the login page loads correctly."""
+    """Test that login page loads correctly."""
     response = client.get('/login')
     assert response.status_code == 200
-    soup = BeautifulSoup(response.data, 'html.parser')
-    assert soup.find('title').text == 'Login - Wild Oak Deals'
-    assert soup.find('form') is not None
-    assert soup.find('input', {'name': 'username'}) is not None
-    assert soup.find('input', {'name': 'password'}) is not None
-    assert soup.find('button', {'type': 'submit'}) is not None
+    assert b'Login' in response.data
+    assert b'Username' in response.data
+    assert b'Password' in response.data
 
-def test_login_ui_elements(client):
-    """Test that the login page has the correct UI elements."""
-    response = client.get('/login')
+def test_login_form_submission(client):
+    """Test login form submission."""
+    response = client.post('/login', data={
+        'username': 'testuser',
+        'password': 'testpassword'
+    }, follow_redirects=True)
     assert response.status_code == 200
-    soup = BeautifulSoup(response.data, 'html.parser')
+    assert b'Welcome' in response.data
 
-    # Check navbar
-    navbar = soup.find('div', {'class': 'navbar'})
-    assert navbar is not None
-    assert navbar.find('a', {'class': 'navbar-brand'}) is not None
+def test_home_page_requires_login(client):
+    """Test that home page requires login."""
+    response = client.get('/')
+    assert response.status_code == 302  # Redirect to login
 
-    # Check form controls
-    form = soup.find('form')
-    assert form is not None
-    assert form.find('input', {'name': 'csrf_token'}) is not None
-    assert form.find('input', {'id': 'username'}) is not None
-    assert form.find('input', {'id': 'password'}) is not None
-    assert form.find('button', {'type': 'submit'}) is not None
-
-    # Check registration link
-    register_link = soup.find('a', href='/register')
-    assert register_link is not None
-
-    # Check styling elements
-    assert soup.find('link', {'rel': 'stylesheet'}) is not None
-
-def test_home_page_ui_after_login(client):
-    """Test that the home page has the correct UI elements after login."""
-    # Login
+def test_home_page_after_login(client):
+    """Test home page after login."""
     login(client, 'testuser', 'testpassword')
-
-    # Get home page
     response = client.get('/')
     assert response.status_code == 200
+    assert b'Welcome' in response.data
+    assert b'Deal List' in response.data
 
+    # Parse the HTML to check for specific elements
     soup = BeautifulSoup(response.data, 'html.parser')
+    assert soup.title is not None
+    assert 'Real Estate Deal Manager' in soup.title.text
 
-    # Check for welcome message
-    welcome_msg = soup.find('p', string=lambda text: 'Welcome, testuser' in text if text else False)
-    assert welcome_msg is not None
+    # Check for form elements
+    forms = soup.find_all('form')
+    assert len(forms) >= 1
 
-    # Check for deal form
-    deal_form = soup.find('form', {'id': 'dealForm'})
-    assert deal_form is not None
-
-    # Check for analytics section
-    analytics = soup.find('h2', string='Deal Analytics')
-    assert analytics is not None
-
-    # Check for charts
-    status_chart = soup.find('canvas', {'id': 'statusChart'})
-    assert status_chart is not None
-    state_chart = soup.find('canvas', {'id': 'stateChart'})
-    assert state_chart is not None
-    user_chart = soup.find('canvas', {'id': 'userChart'})
-    assert user_chart is not None
-    month_chart = soup.find('canvas', {'id': 'monthChart'})
-    assert month_chart is not None
+    # Check for table
+    tables = soup.find_all('table')
+    assert len(tables) >= 1

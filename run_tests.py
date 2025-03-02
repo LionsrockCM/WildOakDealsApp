@@ -8,18 +8,19 @@ import sys
 import os
 import argparse
 import subprocess
-import pytest
 import datetime
 
 def ensure_dependencies():
     """Check and install any missing dependencies for tests."""
-    try:
-        import bs4
-        print("BeautifulSoup is already installed.")
-    except ImportError:
-        print("Installing BeautifulSoup for tests...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "beautifulsoup4"])
-        print("BeautifulSoup installed successfully.")
+    required_packages = ['pytest', 'beautifulsoup4', 'pytest-flask']
+    for package in required_packages:
+        try:
+            __import__(package.replace('-', '_'))
+            print(f"{package} is already installed.")
+        except ImportError:
+            print(f"Installing {package} for tests...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            print(f"{package} installed successfully.")
 
 def run_tests(pattern=None, verbose=True):
     """Run tests and generate a report."""
@@ -33,26 +34,33 @@ def run_tests(pattern=None, verbose=True):
     report_file = f'test_reports/test_report_{timestamp}.txt'
     print(f"Generating report in {report_file}")
     
-    # Build pytest arguments
-    pytest_args = ['-v'] if verbose else []
+    # Build pytest command
+    pytest_cmd = [sys.executable, "-m", "pytest"]
+    if verbose:
+        pytest_cmd.append("-v")
     if pattern:
-        pytest_args.append(pattern)
+        pytest_cmd.append(pattern)
     
-    # Run pytest and capture output to file
+    # Capture output to file
     with open(report_file, 'w') as f:
         try:
-            exit_code = pytest.main(pytest_args)
-            f.write(f"Test run complete.\nExit code: {exit_code}\n")
-            if exit_code == 0:
+            process = subprocess.run(pytest_cmd, capture_output=True, text=True)
+            f.write(process.stdout)
+            f.write(process.stderr)
+            f.write(f"\nTest run complete.\nExit code: {process.returncode}\n")
+            
+            if process.returncode == 0:
                 f.write("All tests passed! ✅\n")
-            else:
-                f.write("Some tests failed. ❌\n")
-            print(f"Test run complete.\nExit code: {exit_code}")
-            if exit_code == 0:
                 print("All tests passed! ✅")
             else:
+                f.write("Some tests failed. ❌\n")
                 print("Some tests failed. ❌")
-            return exit_code
+                
+            print(f"Test run complete.\nExit code: {process.returncode}")
+            print(process.stdout)
+            print(process.stderr)
+            return process.returncode
+            
         except Exception as e:
             error_msg = f"Error running tests: {str(e)}"
             f.write(error_msg + "\n")
