@@ -152,6 +152,11 @@ def home():
 def login():
     if request.method == 'POST':
         try:
+            # Debug form data
+            print("Form data:", request.form)
+            print("CSRF token in session:", session.get('csrf_token'))
+            print("CSRF token in form:", request.form.get('csrf_token'))
+            
             username = request.form.get('username')
             password = request.form.get('password')
             
@@ -163,7 +168,8 @@ def login():
             if user and user.check_password(password):
                 login_user(user, remember=True)
                 print(f"User {user.username} logged in as {user.role.name}")
-                return redirect(url_for('home'))
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('home'))
             
             print("Login failed: Invalid username or password")
             return render_template('login.html', error='Invalid username or password')
