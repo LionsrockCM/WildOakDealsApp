@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -152,10 +152,8 @@ def home():
 def login():
     if request.method == 'POST':
         try:
-            # Debug form data
-            print("Form data:", request.form)
-            print("CSRF token in session:", session.get('csrf_token'))
-            print("CSRF token in form:", request.form.get('csrf_token'))
+            # Clear debug logging
+            print("Login attempt - Form data:", request.form)
             
             username = request.form.get('username')
             password = request.form.get('password')
