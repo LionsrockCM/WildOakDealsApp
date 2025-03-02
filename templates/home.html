@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Real Estate Deal Manager</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Wild Oak Deals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Define functions globally before DOM content loads
@@ -32,13 +35,13 @@
                         <td>${deal.deal_name}</td>
                         <td>${deal.state}</td>
                         <td>${deal.city}</td>
-                        <td>${deal.status}</td>
+                        <td><span class="status-badge">${deal.status}</span></td>
                         <td>${deal.created_at}</td>
                         <td>${deal.updated_at}</td>
-                        <td>
-                            <a href="/deal/${deal.id}">View</a> |
-                            <a href="#" onclick="editDeal(${deal.id}); return false;">Edit</a> |
-                            <a href="#" onclick="deleteDeal(${deal.id}); return false;">Delete</a>
+                        <td class="action-cell">
+                            <a href="/deal/${deal.id}" class="btn btn-sm btn-primary">View</a>
+                            <a href="#" onclick="editDeal(${deal.id}); return false;" class="btn btn-sm btn-secondary">Edit</a>
+                            <a href="#" onclick="deleteDeal(${deal.id}); return false;" class="btn btn-sm btn-danger">Delete</a>
                         </td>
                     `;
                     dealTableBody.appendChild(row);
@@ -77,12 +80,21 @@
                             datasets: [{
                                 label: 'Deals by Status',
                                 data: Object.values(analytics.status_counts),
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(255, 215, 0, 0.6)',
+                                borderColor: '#FFD700',
                                 borderWidth: 1
                             }]
                         },
-                        options: { scales: { y: { beginAtZero: true } } }
+                        options: { 
+                            scales: { y: { beginAtZero: true } },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#333333'
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
 
@@ -96,12 +108,21 @@
                             datasets: [{
                                 label: 'Deals by State',
                                 data: Object.values(analytics.state_counts),
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(74, 74, 74, 0.6)',
+                                borderColor: '#4A4A4A',
                                 borderWidth: 1
                             }]
                         },
-                        options: { scales: { y: { beginAtZero: true } } }
+                        options: { 
+                            scales: { y: { beginAtZero: true } },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#333333'
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
 
@@ -115,12 +136,21 @@
                             datasets: [{
                                 label: 'Deals by User',
                                 data: Object.values(analytics.user_counts),
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(255, 215, 0, 0.4)',
+                                borderColor: '#FFD700',
                                 borderWidth: 1
                             }]
                         },
-                        options: { scales: { y: { beginAtZero: true } } }
+                        options: { 
+                            scales: { y: { beginAtZero: true } },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#333333'
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
 
@@ -135,11 +165,21 @@
                                 label: 'Deals by Month',
                                 data: Object.values(analytics.deals_by_month),
                                 fill: false,
-                                borderColor: 'rgb(75, 192, 192)',
+                                borderColor: '#FFD700',
+                                backgroundColor: 'rgba(255, 215, 0, 0.2)',
                                 tension: 0.1
                             }]
                         },
-                        options: { scales: { y: { beginAtZero: true } } }
+                        options: { 
+                            scales: { y: { beginAtZero: true } },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#333333'
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
             } catch (error) {
@@ -190,206 +230,372 @@
     </script>
 </head>
 <body>
-    <h1>Welcome to Real Estate Deal Manager</h1>
-    {% if current_user.is_authenticated %}
-        <p>Welcome, {{ current_user.username }}!</p>
-        <a href="{{ url_for('logout') }}">Logout</a>
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <h2>Add New Deal</h2>
-        <div id="successMessage" style="display: none; color: green; margin-bottom: 10px;">Deal added successfully!</div>
-
-        <form id="dealForm" action="/api/deals" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div><label for="deal_name">Deal Name:</label><input type="text" id="deal_name" name="deal_name" required><span class="error-message" id="deal_name_error"></span></div>
-            <div><label for="state">State:</label><input type="text" id="state" name="state" list="us-states" required><datalist id="us-states"><!-- 50 US states --></datalist><span class="error-message" id="state_error"></span></div>
-            <div><label for="city">City:</label><input type="text" id="city" name="city" required><span class="error-message" id="city_error"></span></div>
-            <div><label for="status">Status:</label><input type="text" id="status" name="status" required><span class="error-message" id="status_error"></span></div>
-            <button type="submit">Submit Deal</button>
-        </form>
-
-        <h2>Deal List</h2>
-        <table id="dealTable">
-            <thead><tr><th>ID</th><th>Deal Name</th><th>State</th><th>City</th><th>Status</th><th>Created At</th><th>Updated At</th><th>Actions</th></tr></thead>
-            <tbody id="dealTableBody"></tbody>
-        </table>
-
-        <h2>Upload File</h2>
-        <div id="fileSuccessMessage" style="display: none; color: green; margin-bottom: 10px;">File uploaded successfully!</div>
-        <form id="fileForm" action="/api/files/" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div><label for="deal_id">Deal ID:</label><input type="number" id="deal_id" name="deal_id" required><span class="error-message" id="deal_id_error"></span></div>
-            <div><label for="file_name">File Name:</label><input type="text" id="file_name" name="file_name" required><span class="error-message" id="file_name_error"></span></div>
-            <div><label for="dropbox_link">Dropbox Link:</label><input type="text" id="dropbox_link" name="dropbox_link" required><span class="error-message" id="dropbox_link_error"></span></div>
-            <button type="submit">Upload File</button>
-        </form>
-
-        <h2>Deal Analytics</h2>
-        <div>
-            <h3>Deals by Status</h3>
-            <canvas id="statusChart"></canvas>
-            <h3>Deals by State</h3>
-            <canvas id="stateChart"></canvas>
-            <h3>Deals by User</h3>
-            <canvas id="userChart"></canvas>
-            <h3>Deals by Month</h3>
-            <canvas id="monthChart"></canvas>
+    <div class="navbar">
+        <a href="/" class="navbar-brand">Wild Oak Deals</a>
+        <div class="navbar-nav">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('register') }}" class="nav-link">Register</a>
+            {% endif %}
         </div>
+    </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const dealForm = document.getElementById('dealForm');
-                const fileForm = document.getElementById('fileForm');
-                const dealInputs = dealForm.querySelectorAll('input[required]');
-                const fileInputs = fileForm.querySelectorAll('input[required]');
-                const dealSuccessMessage = document.getElementById('successMessage');
-                const fileSuccessMessage = document.getElementById('fileSuccessMessage');
-                const dealTableBody = document.getElementById('dealTableBody');
+    <div class="container">
+        {% if current_user.is_authenticated %}
+            <div class="row mt-3">
+                <div class="welcome-message">Welcome, {{ current_user.username }}!</div>
+                <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                fetchDeals().catch(error => console.error('Error fetching deals on load:', error));
-                fetchAnalytics().catch(error => console.error('Error fetching analytics on load:', error));
+                <!-- Add New Deal Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>Add New Deal</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="successMessage" style="display: none;" class="alert alert-success mb-3">Deal added successfully!</div>
+                        <form id="dealForm" action="/api/deals" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label for="deal_name" class="form-label">Deal Name</label>
+                                <input type="text" id="deal_name" name="deal_name" class="form-control" required>
+                                <span class="error-message" id="deal_name_error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" id="state" name="state" list="us-states" class="form-control" required>
+                                <datalist id="us-states">
+                                    <!-- 50 US states -->
+                                    <option value="Alabama">
+                                    <option value="Alaska">
+                                    <option value="Arizona">
+                                    <option value="Arkansas">
+                                    <option value="California">
+                                    <option value="Colorado">
+                                    <option value="Connecticut">
+                                    <option value="Delaware">
+                                    <option value="Florida">
+                                    <option value="Georgia">
+                                    <option value="Hawaii">
+                                    <option value="Idaho">
+                                    <option value="Illinois">
+                                    <option value="Indiana">
+                                    <option value="Iowa">
+                                    <option value="Kansas">
+                                    <option value="Kentucky">
+                                    <option value="Louisiana">
+                                    <option value="Maine">
+                                    <option value="Maryland">
+                                    <option value="Massachusetts">
+                                    <option value="Michigan">
+                                    <option value="Minnesota">
+                                    <option value="Mississippi">
+                                    <option value="Missouri">
+                                    <option value="Montana">
+                                    <option value="Nebraska">
+                                    <option value="Nevada">
+                                    <option value="New Hampshire">
+                                    <option value="New Jersey">
+                                    <option value="New Mexico">
+                                    <option value="New York">
+                                    <option value="North Carolina">
+                                    <option value="North Dakota">
+                                    <option value="Ohio">
+                                    <option value="Oklahoma">
+                                    <option value="Oregon">
+                                    <option value="Pennsylvania">
+                                    <option value="Rhode Island">
+                                    <option value="South Carolina">
+                                    <option value="South Dakota">
+                                    <option value="Tennessee">
+                                    <option value="Texas">
+                                    <option value="Utah">
+                                    <option value="Vermont">
+                                    <option value="Virginia">
+                                    <option value="Washington">
+                                    <option value="West Virginia">
+                                    <option value="Wisconsin">
+                                    <option value="Wyoming">
+                                </datalist>
+                                <span class="error-message" id="state_error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" id="city" name="city" class="form-control" required>
+                                <span class="error-message" id="city_error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="status" class="form-label">Status</label>
+                                <input type="text" id="status" name="status" list="status-options" class="form-control" required>
+                                <datalist id="status-options">
+                                    <option value="Pending">
+                                    <option value="Active">
+                                    <option value="Closed">
+                                </datalist>
+                                <span class="error-message" id="status_error"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Deal</button>
+                        </form>
+                    </div>
+                </div>
 
-                dealInputs.forEach(input => {
-                    input.addEventListener('blur', function() {
-                        if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'deal');
-                    });
-                    input.addEventListener('input', function() {
-                        if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
-                            document.getElementById(`${this.id}_error`).textContent = '';
-                        }
-                    });
+                <!-- Deal List Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>Deal List</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="dealTable" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Deal Name</th>
+                                        <th>State</th>
+                                        <th>City</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th>Updated At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dealTableBody">
+                                    <!-- Table rows will be populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload File Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>Upload File</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="fileSuccessMessage" style="display: none;" class="alert alert-success mb-3">File uploaded successfully!</div>
+                        <form id="fileForm" action="/api/files/" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label for="deal_id" class="form-label">Deal ID</label>
+                                <input type="number" id="deal_id" name="deal_id" class="form-control" required>
+                                <span class="error-message" id="deal_id_error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="file_name" class="form-label">File Name</label>
+                                <input type="text" id="file_name" name="file_name" class="form-control" required>
+                                <span class="error-message" id="file_name_error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="dropbox_link" class="form-label">Dropbox Link</label>
+                                <input type="text" id="dropbox_link" name="dropbox_link" class="form-control" required>
+                                <span class="error-message" id="dropbox_link_error"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Upload File</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>Deal Analytics</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="analytics-grid">
+                            <div class="analytics-item">
+                                <h3>Deals by Status</h3>
+                                <div class="chart-container">
+                                    <canvas id="statusChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="analytics-item">
+                                <h3>Deals by State</h3>
+                                <div class="chart-container">
+                                    <canvas id="stateChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="analytics-item">
+                                <h3>Deals by User</h3>
+                                <div class="chart-container">
+                                    <canvas id="userChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="analytics-item">
+                                <h3>Deals by Month</h3>
+                                <div class="chart-container">
+                                    <canvas id="monthChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="row mt-5">
+                <div class="text-center">
+                    <h1>Welcome to Wild Oak Deals</h1>
+                    <p class="lead mt-3">The premier platform for managing real estate deals.</p>
+                    <div class="action-buttons mt-4">
+                        <a href="{{ url_for('login') }}" class="btn btn-primary mr-2">Login</a>
+                        <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dealForm = document.getElementById('dealForm');
+            const fileForm = document.getElementById('fileForm');
+            const dealInputs = dealForm.querySelectorAll('input[required]');
+            const fileInputs = fileForm.querySelectorAll('input[required]');
+            const dealSuccessMessage = document.getElementById('successMessage');
+            const fileSuccessMessage = document.getElementById('fileSuccessMessage');
+            const dealTableBody = document.getElementById('dealTableBody');
+
+            fetchDeals().catch(error => console.error('Error fetching deals on load:', error));
+            fetchAnalytics().catch(error => console.error('Error fetching analytics on load:', error));
+
+            dealInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'deal');
                 });
+                input.addEventListener('input', function() {
+                    if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
+                        document.getElementById(`${this.id}_error`).textContent = '';
+                    }
+                });
+            });
 
-                dealForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    let isValid = true;
-                    dealInputs.forEach(input => {
-                        if (!validateField(input, 'deal')) isValid = false;
-                    });
-                    if (isValid) {
-                        const formData = new FormData(dealForm);
-                        fetch('/api/deals', {
-                            method: 'POST',
-                            body: formData,
-                            credentials: 'include'
-                        })
-                        .then(response => {
-                            console.log('Deal submission response:', response.status);
-                            if (!response.ok) {
-                                return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Deal submission data:', data);
-                            if (data.message) {
-                                dealSuccessMessage.textContent = data.message;
-                                dealSuccessMessage.style.display = 'block';
-                                dealSuccessMessage.style.color = 'green';
-                                dealForm.reset();
-                                setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
-                                fetchDeals().catch(error => console.error('Error refreshing deals:', error));
-                                fetchAnalytics().catch(error => console.error('Error refreshing analytics:', error));
-                            } else if (data.error) {
-                                dealSuccessMessage.textContent = data.error;
-                                dealSuccessMessage.style.color = 'red';
-                                dealSuccessMessage.style.display = 'block';
-                                setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Deal submission error:', error);
-                            dealSuccessMessage.textContent = error.message || 'An error occurred';
-                            dealSuccessMessage.style.color = 'red';
+            dealForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                let isValid = true;
+                dealInputs.forEach(input => {
+                    if (!validateField(input, 'deal')) isValid = false;
+                });
+                if (isValid) {
+                    const formData = new FormData(dealForm);
+                    fetch('/api/deals', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    })
+                    .then(response => {
+                        console.log('Deal submission response:', response.status);
+                        if (!response.ok) {
+                            return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Deal submission data:', data);
+                        if (data.message) {
+                            dealSuccessMessage.textContent = data.message;
+                            dealSuccessMessage.style.display = 'block';
+                            dealForm.reset();
+                            setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
+                            fetchDeals().catch(error => console.error('Error refreshing deals:', error));
+                            fetchAnalytics().catch(error => console.error('Error refreshing analytics:', error));
+                        } else if (data.error) {
+                            dealSuccessMessage.textContent = data.error;
+                            dealSuccessMessage.style.color = 'var(--color-error)';
                             dealSuccessMessage.style.display = 'block';
                             setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
-                        });
-                    }
-                });
-
-                fileInputs.forEach(input => {
-                    input.addEventListener('blur', function() {
-                        if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'file');
-                    });
-                    input.addEventListener('input', function() {
-                        if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
-                            document.getElementById(`${this.id}_error`).textContent = '';
                         }
+                    })
+                    .catch(error => {
+                        console.error('Deal submission error:', error);
+                        dealSuccessMessage.textContent = error.message || 'An error occurred';
+                        dealSuccessMessage.style.color = 'var(--color-error)';
+                        dealSuccessMessage.style.display = 'block';
+                        setTimeout(() => dealSuccessMessage.style.display = 'none', 3000);
                     });
-                });
-
-                fileForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    let isValid = true;
-                    fileInputs.forEach(input => {
-                        if (!validateField(input, 'file')) isValid = false;
-                    });
-                    if (isValid) {
-                        const dealId = document.getElementById('deal_id').value;
-                        const formData = new FormData(fileForm);
-                        fetch(`/api/files/${dealId}`, {
-                            method: 'POST',
-                            body: formData,
-                            credentials: 'include'
-                        })
-                        .then(response => {
-                            console.log('File submission response:', response.status);
-                            if (!response.ok) {
-                                return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('File submission data:', data);
-                            if (data.message) {
-                                fileSuccessMessage.textContent = data.message;
-                                fileSuccessMessage.style.display = 'block';
-                                fileSuccessMessage.style.color = 'green';
-                                fileForm.reset();
-                                setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
-                            } else if (data.error) {
-                                fileSuccessMessage.textContent = data.error;
-                                fileSuccessMessage.style.color = 'red';
-                                fileSuccessMessage.style.display = 'block';
-                                setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('File submission error:', error);
-                            fileSuccessMessage.textContent = error.message || 'An error occurred';
-                            fileSuccessMessage.style.color = 'red';
-                            fileSuccessMessage.style.display = 'block';
-                            setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
-                        });
-                    }
-                });
-
-                function validateField(field, formType) {
-                    console.log('validateField called for field:', field ? field.id : 'undefined');
-                    if (!field) {
-                        console.error('Field is undefined');
-                        return true;
-                    }
-                    if (field.tagName === 'INPUT' && field.hasAttribute('required')) {
-                        const errorElement = document.getElementById(`${field.id}_error`);
-                        if (!errorElement) {
-                            console.error(`Error element not found for field: ${field.id}`);
-                            return true;
-                        }
-                        if (!field.value || !field.value.trim()) {
-                            errorElement.textContent = 'Field required';
-                            errorElement.style.color = 'red';
-                            return false;
-                        }
-                        errorElement.textContent = '';
-                        return true;
-                    }
-                    return true;
                 }
             });
-        </script>
-    {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-    {% endif %}
+
+            fileInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.tagName === 'INPUT' && this.hasAttribute('required')) validateField(this, 'file');
+                });
+                input.addEventListener('input', function() {
+                    if (this.value.trim() !== '' && this.tagName === 'INPUT' && this.hasAttribute('required')) {
+                        document.getElementById(`${this.id}_error`).textContent = '';
+                    }
+                });
+            });
+
+            fileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                let isValid = true;
+                fileInputs.forEach(input => {
+                    if (!validateField(input, 'file')) isValid = false;
+                });
+                if (isValid) {
+                    const dealId = document.getElementById('deal_id').value;
+                    const formData = new FormData(fileForm);
+                    fetch(`/api/files/${dealId}`, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    })
+                    .then(response => {
+                        console.log('File submission response:', response.status);
+                        if (!response.ok) {
+                            return response.json().then(error => { throw new Error(error.error || 'Bad request'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('File submission data:', data);
+                        if (data.message) {
+                            fileSuccessMessage.textContent = data.message;
+                            fileSuccessMessage.style.display = 'block';
+                            fileForm.reset();
+                            setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                        } else if (data.error) {
+                            fileSuccessMessage.textContent = data.error;
+                            fileSuccessMessage.style.color = 'var(--color-error)';
+                            fileSuccessMessage.style.display = 'block';
+                            setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('File submission error:', error);
+                        fileSuccessMessage.textContent = error.message || 'An error occurred';
+                        fileSuccessMessage.style.color = 'var(--color-error)';
+                        fileSuccessMessage.style.display = 'block';
+                        setTimeout(() => fileSuccessMessage.style.display = 'none', 3000);
+                    });
+                }
+            });
+
+            function validateField(field, formType) {
+                console.log('validateField called for field:', field ? field.id : 'undefined');
+                if (!field) {
+                    console.error('Field is undefined');
+                    return true;
+                }
+                if (field.tagName === 'INPUT' && field.hasAttribute('required')) {
+                    const errorElement = document.getElementById(`${field.id}_error`);
+                    if (!errorElement) {
+                        console.error(`Error element not found for field: ${field.id}`);
+                        return true;
+                    }
+                    if (!field.value || !field.value.trim()) {
+                        errorElement.textContent = 'Field required';
+                        errorElement.style.color = 'var(--color-error)';
+                        return false;
+                    }
+                    errorElement.textContent = '';
+                    return true;
+                }
+                return true;
+            }
+        });
+    </script>
 </body>
 </html>

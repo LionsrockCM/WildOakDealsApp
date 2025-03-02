@@ -22,7 +22,7 @@ def test_home_page_authenticated(client):
     
     # Check for key elements on the home page
     soup = BeautifulSoup(response.data, 'html.parser')
-    assert soup.find('h1', string='Welcome to Real Estate Deal Manager') is not None
+    assert soup.find('a', class_='navbar-brand', string='Wild Oak Deals') is not None
     assert 'Add New Deal' in soup.get_text()
     assert 'Deal List' in soup.get_text()
     assert 'Deal Analytics' in soup.get_text()
