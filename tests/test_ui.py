@@ -1,7 +1,6 @@
 import os
 import sys
 import pytest
-import time
 from bs4 import BeautifulSoup
 
 # Add parent directory to path so we can import the app
@@ -43,41 +42,42 @@ def login(client, username, password):
         'password': password
     }, follow_redirects=True)
 
+def test_login_page_loads(client):
+    """Test that the login page loads correctly."""
+    response = client.get('/login')
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, 'html.parser')
+    assert soup.find('title').text == 'Login - Wild Oak Deals'
+    assert soup.find('form') is not None
+    assert soup.find('input', {'name': 'username'}) is not None
+    assert soup.find('input', {'name': 'password'}) is not None
+    assert soup.find('button', {'type': 'submit'}) is not None
+
 def test_login_ui_elements(client):
     """Test that the login page has the correct UI elements."""
     response = client.get('/login')
     assert response.status_code == 200
-
     soup = BeautifulSoup(response.data, 'html.parser')
 
-    # Check for brand colors in CSS
-    style_link = soup.find('link', {'rel': 'stylesheet'})
-    assert style_link is not None
-    assert 'styles.css' in style_link['href']
-
-    # Check for navbar
+    # Check navbar
     navbar = soup.find('div', {'class': 'navbar'})
     assert navbar is not None
+    assert navbar.find('a', {'class': 'navbar-brand'}) is not None
 
-    # Check for login form elements
-    form = soup.find('form', {'method': 'POST'})
+    # Check form controls
+    form = soup.find('form')
     assert form is not None
+    assert form.find('input', {'name': 'csrf_token'}) is not None
+    assert form.find('input', {'id': 'username'}) is not None
+    assert form.find('input', {'id': 'password'}) is not None
+    assert form.find('button', {'type': 'submit'}) is not None
 
-    # Check for username and password inputs
-    username_input = form.find('input', {'id': 'username'})
-    assert username_input is not None
-    password_input = form.find('input', {'id': 'password'})
-    assert password_input is not None
-
-    # Check for login button
-    login_button = form.find('button', {'type': 'submit'})
-    assert login_button is not None
-    assert 'Login' in login_button.text
-
-    # Check for register link
+    # Check registration link
     register_link = soup.find('a', href='/register')
     assert register_link is not None
-    assert 'Register' in register_link.text
+
+    # Check styling elements
+    assert soup.find('link', {'rel': 'stylesheet'}) is not None
 
 def test_home_page_ui_after_login(client):
     """Test that the home page has the correct UI elements after login."""

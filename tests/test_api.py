@@ -141,6 +141,15 @@ def test_api_files_get(client):
     # Get test deal ID
     with app.app_context():
         deal_id = Deal.query.filter_by(deal_name="Test Deal").first().id
+        
+        # Create a test file for this deal
+        test_file = File(
+            deal_id=deal_id,
+            file_name="Test File",
+            dropbox_link="https://dropbox.com/test"
+        )
+        db.session.add(test_file)
+        db.session.commit()
     
     # Get files
     response = client.get(f'/api/files/{deal_id}')

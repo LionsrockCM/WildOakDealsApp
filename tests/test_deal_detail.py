@@ -8,6 +8,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from main import app, db, User, Role, Deal, DealStatusHistory, File
 
 @pytest.fixture
+import os
+import sys
+import pytest
+from bs4 import BeautifulSoup
+import json
+from datetime import datetime
+
+# Add parent directory to path so we can import the app
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from main import app, db, User, Role, Deal, DealStatusHistory, File
+
+@pytest.fixture
 def client():
     """Create a test client for the app."""
     app.config['TESTING'] = True
