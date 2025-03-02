@@ -150,7 +150,7 @@ def test_api_files_get(client):
     files = json.loads(response.data)
     assert len(files) == 1
     assert files[0]['file_name'] == "Test File"
-    assert files[0]['dropbox_link'] == "https://dropbox.com/testlink"
+    assert files[0]['dropbox_link'] == "https://dropbox.com/test"
 
 def test_api_files_post(client):
     """Test that a user can create a new file for a deal."""
