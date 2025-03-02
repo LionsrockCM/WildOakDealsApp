@@ -1,0 +1,3601 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.10, pytest-8.3.4, pluggy-1.5.0 -- /home/runner/workspace/.pythonlibs/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/workspace
+configfile: pyproject.toml
+plugins: flask-1.3.0
+collecting ... collected 15 items
+
+tests/test_api.py::test_api_login_required ERROR                         [  6%]
+tests/test_api.py::test_api_deals_get ERROR                              [ 13%]
+tests/test_api.py::test_api_deals_post ERROR                             [ 20%]
+tests/test_api.py::test_api_analytics ERROR                              [ 26%]
+tests/test_deal_detail.py::test_deal_detail_requires_login ERROR         [ 33%]
+tests/test_deal_detail.py::test_deal_detail_page_loads ERROR             [ 40%]
+tests/test_deal_detail.py::test_deal_detail_page ERROR                   [ 46%]
+tests/test_deal_detail.py::test_edit_deal_functionality ERROR            [ 53%]
+tests/test_register.py::test_register_page_loads ERROR                   [ 60%]
+tests/test_register.py::test_register_new_user ERROR                     [ 66%]
+tests/test_register.py::test_register_existing_username ERROR            [ 73%]
+tests/test_ui.py::test_login_page_loads ERROR                            [ 80%]
+tests/test_ui.py::test_login_form_submission ERROR                       [ 86%]
+tests/test_ui.py::test_home_page_requires_login ERROR                    [ 93%]
+tests/test_ui.py::test_home_page_after_login ERROR                       [100%]
+
+==================================== ERRORS ====================================
+__________________ ERROR at setup of test_api_login_required ___________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474c6a1350>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474caaa690>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c508840>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474caaa690>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_api.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c508840>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474caaa690>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+_____________________ ERROR at setup of test_api_deals_get _____________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b8fde10>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8fdb90>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b6d9f40>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8fdb90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_api.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b6d9f40>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8fdb90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+____________________ ERROR at setup of test_api_deals_post _____________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474c6edfd0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c6ecf10>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b535540>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c6ecf10>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_api.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b535540>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c6ecf10>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+_____________________ ERROR at setup of test_api_analytics _____________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474bc1a190>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9c6050>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c2fd2c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9c6050>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_api.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c2fd2c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9c6050>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+______________ ERROR at setup of test_deal_detail_requires_login _______________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b9a1850>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9a0e90>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b850940>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9a0e90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_deal_detail.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b850940>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b9a0e90>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+________________ ERROR at setup of test_deal_detail_page_loads _________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b6c9950>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b6c9b50>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c4a29c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b6c9b50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_deal_detail.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c4a29c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b6c9b50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+___________________ ERROR at setup of test_deal_detail_page ____________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474c52fbd0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c5797d0>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c061bc0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c5797d0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_deal_detail.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c061bc0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474c5797d0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+________________ ERROR at setup of test_edit_deal_functionality ________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b731510>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b7315d0>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c5085c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b7315d0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_deal_detail.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c5085c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b7315d0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+__________________ ERROR at setup of test_register_page_loads __________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b836bd0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b836ad0>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b35a6c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b836ad0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_register.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b35a6c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b836ad0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+___________________ ERROR at setup of test_register_new_user ___________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b8fd6d0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8ffe50>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b1f0840>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8ffe50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_register.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b1f0840>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b8ffe50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+______________ ERROR at setup of test_register_existing_username _______________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b62e910>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b62f010>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c5089c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b62f010>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_register.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c5089c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b62f010>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+___________________ ERROR at setup of test_login_page_loads ____________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b735c50>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b735c10>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b1a1c40>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b735c10>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_ui.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b1a1c40>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b735c10>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+_________________ ERROR at setup of test_login_form_submission _________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474b682ed0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b681590>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c3db340>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b681590>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_ui.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474c3db340>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474b681590>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+_______________ ERROR at setup of test_home_page_requires_login ________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474bb75a90>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bb75950>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b3590c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bb75950>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_ui.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474b3590c0>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bb75950>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+_________________ ERROR at setup of test_home_page_after_login _________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f474bd943d0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bd95b50>
+
+    def _exec_insertmany_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for an "insertmanyvalues"
+        operation, which will invoke DBAPI
+        cursor.execute() one or more times with individual log and
+        event hook calls.
+    
+        """
+    
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+        else:
+            generic_setinputsizes = None
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters = parameters
+    
+        engine_events = self._has_events or self.engine._has_events
+        if self.dialect._has_events:
+            do_execute_dispatch: Iterable[Any] = (
+                self.dialect.dispatch.do_execute
+            )
+        else:
+            do_execute_dispatch = ()
+    
+        if self._echo:
+            stats = context._get_cache_stats() + " (insertmanyvalues)"
+    
+        preserve_rowcount = context.execution_options.get(
+            "preserve_rowcount", False
+        )
+        rowcount = 0
+    
+        for imv_batch in dialect._deliver_insertmanyvalues_batches(
+            self,
+            cursor,
+            str_statement,
+            effective_parameters,
+            generic_setinputsizes,
+            context,
+        ):
+            if imv_batch.processed_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor,
+                        imv_batch.processed_setinputsizes,
+                        context,
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e,
+                        sql_util._long_statement(imv_batch.replaced_statement),
+                        imv_batch.replaced_parameters,
+                        None,
+                        context,
+                        is_sub_exec=True,
+                    )
+    
+            sub_stmt = imv_batch.replaced_statement
+            sub_params = imv_batch.replaced_parameters
+    
+            if engine_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    sub_stmt, sub_params = fn(
+                        self,
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                        True,
+                    )
+    
+            if self._echo:
+                self._log_info(sql_util._long_statement(sub_stmt))
+    
+                imv_stats = f""" {imv_batch.batchnum}/{
+                            imv_batch.total_batches
+                } ({
+                    'ordered'
+                    if imv_batch.rows_sorted else 'unordered'
+                }{
+                    '; batch not supported'
+                    if imv_batch.is_downgraded
+                    else ''
+                })"""
+    
+                if imv_batch.batchnum == 1:
+                    stats += imv_stats
+                else:
+                    stats = f"insertmanyvalues{imv_stats}"
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            sub_params,
+                            batches=10,
+                            ismulti=False,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+    
+            try:
+                for fn in do_execute_dispatch:
+                    if fn(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    ):
+                        break
+                else:
+>                   dialect.do_execute(
+                        cursor,
+                        sub_stmt,
+                        sub_params,
+                        context,
+                    )
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474bff6240>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bd95b50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: UNIQUE constraint failed: role.name
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+    @pytest.fixture
+    def client():
+        """Create a test client for the app."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+        with app.test_client() as client:
+            with app.app_context():
+                db.create_all()
+                # Create roles
+                admin_role = Role(name='Admin')
+                user_role = Role(name='User')
+                db.session.add(admin_role)
+                db.session.add(user_role)
+>               db.session.commit()
+
+tests/test_ui.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py:599: in commit
+    return self._proxied.commit()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:2032: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1313: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:1288: in _prepare_impl
+    self.session.flush()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1416: in execute
+    return meth(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/sql/elements.py:516: in _execute_on_connection
+    return connection._execute_clauseelement(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1638: in _execute_clauseelement
+    ret = self._execute_context(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1841: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2123: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2352: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py:2115: in _exec_insertmany_context
+    dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f474ca40210>
+cursor = <sqlite3.Cursor object at 0x7f474bff6240>
+statement = 'INSERT INTO role (name) VALUES (?) RETURNING id'
+parameters = ('Admin',)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f474bd95b50>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: role.name
+E       [SQL: INSERT INTO role (name) VALUES (?) RETURNING id]
+E       [parameters: ('Admin',)]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py:942: IntegrityError
+=========================== short test summary info ============================
+ERROR tests/test_api.py::test_api_login_required - sqlalchemy.exc.IntegrityEr...
+ERROR tests/test_api.py::test_api_deals_get - sqlalchemy.exc.IntegrityError: ...
+ERROR tests/test_api.py::test_api_deals_post - sqlalchemy.exc.IntegrityError:...
+ERROR tests/test_api.py::test_api_analytics - sqlalchemy.exc.IntegrityError: ...
+ERROR tests/test_deal_detail.py::test_deal_detail_requires_login - sqlalchemy...
+ERROR tests/test_deal_detail.py::test_deal_detail_page_loads - sqlalchemy.exc...
+ERROR tests/test_deal_detail.py::test_deal_detail_page - sqlalchemy.exc.Integ...
+ERROR tests/test_deal_detail.py::test_edit_deal_functionality - sqlalchemy.ex...
+ERROR tests/test_register.py::test_register_page_loads - sqlalchemy.exc.Integ...
+ERROR tests/test_register.py::test_register_new_user - sqlalchemy.exc.Integri...
+ERROR tests/test_register.py::test_register_existing_username - sqlalchemy.ex...
+ERROR tests/test_ui.py::test_login_page_loads - sqlalchemy.exc.IntegrityError...
+ERROR tests/test_ui.py::test_login_form_submission - sqlalchemy.exc.Integrity...
+ERROR tests/test_ui.py::test_home_page_requires_login - sqlalchemy.exc.Integr...
+ERROR tests/test_ui.py::test_home_page_after_login - sqlalchemy.exc.Integrity...
+============================== 15 errors in 5.80s ==============================
+
+Test run complete.
+Exit code: 1
+Some tests failed. ❌
